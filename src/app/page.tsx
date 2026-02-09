@@ -530,16 +530,43 @@ function CategoriesSection() {
 }
 
 // ===== WAITLIST =====
+import { supabase } from "@/lib/supabase";
+
 function WaitlistSection() {
   const [formType, setFormType] = useState<"customer" | "vendor">("customer");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { error: supabaseError } = await supabase
+        .from('waitlist')
+        .insert([
+          {
+            name,
+            email,
+            phone,
+            type: formType
+          }
+        ]);
+
+      if (supabaseError) throw supabaseError;
+
+      setSubmitted(true);
+    } catch (err: any) {
+      console.error('Error submitting to waitlist:', err);
+      setError("عذراً، حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -628,12 +655,24 @@ function WaitlistSection() {
                       className="w-full px-6 py-4 rounded-xl bg-[var(--cream)] text-[var(--charcoal)] placeholder:text-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)] transition-all duration-300 hover:shadow-md"
                     />
                   ))}
+
+                  {error && (
+                    <div className="text-red-500 text-sm text-center font-bold">
+                      {error}
+                    </div>
+                  )}
+
                   <button
                     type="submit"
-                    className={`w-full py-4 text-lg font-bold rounded-xl text-white transition-all duration-500 hover:shadow-xl hover:scale-[1.02] ${formType === "customer" ? "bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)]" : "bg-gradient-to-r from-[var(--secondary)] to-[var(--secondary-light)]"
-                      }`}
+                    disabled={loading}
+                    className={`w-full py-4 text-lg font-bold rounded-xl text-white transition-all duration-500 hover:shadow-xl hover:scale-[1.02] flex items-center justify-center gap-2 ${formType === "customer" ? "bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)]" : "bg-gradient-to-r from-[var(--secondary)] to-[var(--secondary-light)]"
+                      } ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
-                    🚀 سجلني الآن
+                    {loading ? (
+                      <span className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></span>
+                    ) : (
+                      <>🚀 سجلني الآن</>
+                    )}
                   </button>
                 </form>
               </>
