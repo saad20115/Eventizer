@@ -3,6 +3,15 @@
 
 
 import { useState, useEffect, useRef } from "react";
+import { z } from "zod";
+
+// Validation Schema
+const waitlistSchema = z.object({
+  name: z.string().min(2, "الاسم يجب أن يكون أكثر من حرفين"),
+  email: z.string().email("البريد الإلكتروني غير صحيح"),
+  phone: z.string().optional(),
+  type: z.enum(["customer", "vendor"]),
+});
 
 // ===== CUSTOM CURSOR COMPONENT =====
 function CustomCursor() {
@@ -111,7 +120,7 @@ function Header() {
   ];
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "bg-white/95 backdrop-blur-lg shadow-lg" : "bg-transparent"}`}>
+    <header className={`header ${scrolled ? "header-solid" : "header-transparent"}`}>
       <div className="container mx-auto px-4">
         <nav className="flex items-center justify-between py-4">
           {/* Logo */}
@@ -132,9 +141,8 @@ function Header() {
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--primary)] group-hover:w-full transition-all duration-300" />
               </a>
             ))}
-            <a href="#waitlist" className="relative overflow-hidden bg-[var(--primary)] text-white px-6 py-3 rounded-full font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105 group">
+            <a href="#waitlist" className="btn-primary group">
               <span className="relative z-10">ابدأ الآن</span>
-              <div className="absolute inset-0 bg-[var(--primary-dark)] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
             </a>
           </div>
 
@@ -266,20 +274,18 @@ function HeroSection() {
             >
               <a
                 href="#waitlist"
-                className="group relative overflow-hidden bg-[var(--primary)] text-white text-lg px-10 py-4 rounded-full font-semibold transition-all duration-500 hover:shadow-2xl hover:scale-105"
+                className="btn-primary text-lg px-10 py-4"
               >
-                <span className="relative z-10 flex items-center justify-center gap-2">
-                  <span className="group-hover:animate-bounce">🎉</span>
+                <span className="flex items-center justify-center gap-2">
+                  <span className="animate-bounce">🎉</span>
                   انضم لقائمة الانتظار
                 </span>
-                <div className="absolute inset-0 bg-gradient-to-r from-[var(--primary-dark)] to-[var(--primary)] transform translate-x-full group-hover:translate-x-0 transition-transform duration-500" />
               </a>
               <a
                 href="#how-it-works"
-                className="group relative border-2 border-[var(--primary)] text-[var(--primary)] text-lg px-10 py-4 rounded-full font-semibold transition-all duration-300 hover:bg-[var(--primary)] hover:text-white hover:scale-105"
+                className="btn-outline text-lg px-10 py-4"
               >
                 كيف يعمل؟
-                <span className="absolute inset-0 rounded-full border-2 border-[var(--primary)] scale-110 opacity-0 group-hover:opacity-100 group-hover:scale-125 transition-all duration-500" />
               </a>
             </div>
 
@@ -404,23 +410,21 @@ function FeaturesSection() {
     <section id="features" className="py-24 bg-white relative overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <span className="text-[var(--gold)] font-medium mb-2 block animate-fadeInUp">✦ المميزات ✦</span>
+          <span className="gold-text font-medium mb-2 block animate-fadeInUp">✦ المميزات ✦</span>
           <h2 className="text-4xl md:text-5xl font-serif mb-4 animate-fadeInUp" style={{ animationDelay: '0.1s' }}>
-            لماذا <span className="bg-gradient-to-r from-[var(--gold)] via-[var(--primary)] to-[var(--gold)] bg-clip-text text-transparent">Eventizer</span>؟
+            لماذا <span className="text-gradient">Eventizer</span>؟
           </h2>
-          <div className="w-24 h-1 bg-gradient-to-r from-transparent via-[var(--gold)] to-transparent mx-auto rounded-full animate-fadeInUp" style={{ animationDelay: '0.2s' }} />
+          <div className="gold-line mx-auto rounded-full animate-fadeInUp" style={{ animationDelay: '0.2s' }} />
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, i) => (
             <div
               key={i}
-              className="group bg-gradient-to-br from-white to-[rgba(212,175,55,0.02)] rounded-3xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 border border-[var(--border)] hover:border-[var(--gold)] hover:-translate-y-2 cursor-pointer animate-fadeInUp relative overflow-hidden"
+              className="card cursor-pointer animate-fadeInUp group"
               style={{ animationDelay: `${0.1 * i}s` }}
             >
-              {/* Gold accent line on top */}
-              <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[var(--gold)] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mb-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 ${feature.color === 'primary' ? 'bg-gradient-to-br from-[var(--primary)] to-[var(--primary-light)]' : 'bg-gradient-to-br from-[var(--secondary)] to-[var(--secondary-light)]'}`}>
+              <div className={`icon-box mb-6 group-hover:scale-110 group-hover:rotate-6 ${feature.color === 'primary' ? 'icon-box-primary' : 'icon-box-secondary'}`}>
                 <span className="filter drop-shadow-lg">{feature.icon}</span>
               </div>
               <h3 className="text-xl font-bold mb-3 group-hover:text-[var(--primary)] transition-colors">{feature.title}</h3>
@@ -539,16 +543,36 @@ function WaitlistSection() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [name, setName] = useState("");
+  const [honeypot, setHoneypot] = useState(""); // Honeypot for spam protection
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Spam Check
+    if (honeypot) {
+      console.log("Spam detected!");
+      return; // Silently fail for bots
+    }
+
     setLoading(true);
     setError(null);
 
     try {
+      // Validate Input
+      const validationResult = waitlistSchema.safeParse({
+        name,
+        email,
+        phone: phone || undefined, // Handle empty string as undefined for optional
+        type: formType,
+      });
+
+      if (!validationResult.success) {
+        throw new Error(validationResult.error.issues[0].message);
+      }
+
       const { error: supabaseError } = await supabase
         .from('waitlist')
         .insert([
@@ -565,7 +589,7 @@ function WaitlistSection() {
       setSubmitted(true);
     } catch (err: any) {
       console.error('Error submitting to waitlist:', err);
-      setError("عذراً، حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.");
+      setError(err.message || "عذراً، حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.");
     } finally {
       setLoading(false);
     }
@@ -642,6 +666,17 @@ function WaitlistSection() {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Honeypot Field (Hidden) */}
+                  <input
+                    type="text"
+                    name="website_url"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    style={{ display: 'none' }}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+
                   {[
                     { type: "text", placeholder: "الاسم الكامل", value: name, setter: setName, required: true },
                     { type: "email", placeholder: "البريد الإلكتروني", value: email, setter: setEmail, required: true },
@@ -667,8 +702,7 @@ function WaitlistSection() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className={`w-full py-4 text-lg font-bold rounded-xl text-white transition-all duration-500 hover:shadow-xl hover:scale-[1.02] flex items-center justify-center gap-2 ${formType === "customer" ? "bg-gradient-to-r from-[var(--primary)] to-[var(--primary-light)]" : "bg-gradient-to-r from-[var(--secondary)] to-[var(--secondary-light)]"
-                      } ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    className={`${formType === "customer" ? "btn-primary" : "btn-secondary"} w-full justify-center text-lg ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
                   >
                     {loading ? (
                       <span className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -760,14 +794,13 @@ function FloatingButtons() {
   };
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 flex flex-col gap-3">
-      {/* Scroll to Top Button */}
+    <>
+      {/* Scroll to Top Button - Left Side */}
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="w-14 h-14 rounded-full bg-[var(--primary)] text-white shadow-lg hover:bg-[var(--primary-dark)] transition-all duration-300 hover:scale-110 flex items-center justify-center"
+          className="fixed bottom-6 left-6 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#20BA5C] transition-all duration-300 hover:scale-110 flex items-center justify-center animate-bounce"
           aria-label="العودة للأعلى"
-          style={{ animation: 'fadeInUp 0.3s ease forwards' }}
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
@@ -775,19 +808,19 @@ function FloatingButtons() {
         </button>
       )}
 
-      {/* WhatsApp Button */}
+      {/* WhatsApp Button - Right Side */}
       <a
         href="https://wa.me/966500000000"
         target="_blank"
         rel="noopener noreferrer"
-        className="w-14 h-14 rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#20BA5C] transition-all duration-300 hover:scale-110 flex items-center justify-center"
+        className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[#25D366] text-white shadow-lg hover:bg-[#20BA5C] transition-all duration-300 hover:scale-110 flex items-center justify-center"
         aria-label="تواصل عبر واتساب"
       >
         <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
           <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
         </svg>
       </a>
-    </div>
+    </>
   );
 }
 
@@ -795,33 +828,6 @@ function FloatingButtons() {
 export default function Home() {
   return (
     <>
-      <style jsx global>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          25% { transform: translateY(-20px) rotate(2deg); }
-          75% { transform: translateY(-10px) rotate(-2deg); }
-        }
-        @keyframes floatDot {
-          0%, 100% { transform: translateY(0) translateX(0); }
-          25% { transform: translateY(-8px) translateX(3px); }
-          50% { transform: translateY(-4px) translateX(-2px); }
-          75% { transform: translateY(-12px) translateX(1px); }
-        }
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeInDown {
-          from { opacity: 0; transform: translateY(-30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fadeInUp { animation: fadeInUp 0.8s ease forwards; }
-        .animate-fadeInDown { animation: fadeInDown 0.8s ease forwards; }
-      `}</style>
       <CustomCursor />
       <InteractiveGeometricBackground />
       <Header />

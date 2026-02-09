@@ -17,5 +17,7 @@ CREATE POLICY "Allow public insert to waitlist" ON waitlist
 
 -- Create policy to allow only authenticated users to view (admin)
 -- (Note: You'll need to configure your admin users/roles later)
-CREATE POLICY "Allow authenticated view of waitlist" ON waitlist
-  FOR SELECT USING (auth.role() = 'authenticated');
+-- SECURITY UPDATE: Commented out to prevent default authenticated access.
+-- Only enable this if you have a proper admin role check (e.g., using custom claims).
+-- CREATE POLICY "Allow authenticated view of waitlist" ON waitlist
+--   FOR SELECT USING (auth.role() = 'authenticated');
