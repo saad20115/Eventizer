@@ -1,17 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-export default function LoginPage() {
+function LoginContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const roleParam = searchParams.get('role');
+
+    // Default to 'customer' if no role specified or invalid
+    const [currentRole, setCurrentRole] = useState<'customer' | 'provider' | 'admin'>('customer');
+
+    useEffect(() => {
+        if (roleParam === 'provider') setCurrentRole('provider');
+        else if (roleParam === 'admin') setCurrentRole('admin');
+        else setCurrentRole('customer');
+    }, [roleParam]);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+
+    // Theme Config based on Role
+    const themes = {
+        customer: {
+            title: "تسجيل دخول العملاء",
+            gradient: "from-[#722F37] to-[#D4AF37]", // Burgundy to Gold
+            buttonBg: "bg-[#722F37] hover:bg-[#59242b]",
+            accent: "text-[#722F37]",
+            bgOverlay: "bg-[#722F37]/5",
+            icon: "🎉"
+        },
+        provider: {
+            title: "بوابة مقدمي الخدمة",
+            gradient: "from-[#6B7B5E] to-[#2C3E50]", // Sage to Navy
+            buttonBg: "bg-[#6B7B5E] hover:bg-[#55634a]",
+            accent: "text-[#6B7B5E]",
+            bgOverlay: "bg-[#6B7B5E]/5",
+            icon: "🏪"
+        },
+        admin: {
+            title: "لوحة تحكم الإدارة",
+            gradient: "from-[#1a1a1a] to-[#4a4a4a]", // Dark Grayscale
+            buttonBg: "bg-[#1a1a1a] hover:bg-[#333]",
+            accent: "text-[#1a1a1a]",
+            bgOverlay: "bg-gray-100",
+            icon: "🛡️"
+        }
+    };
+
+    const theme = themes[currentRole];
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -24,10 +65,8 @@ export default function LoginPage() {
                 password,
             });
 
-            if (error) throw error;
-
             if (data.user) {
-                // Fetch user profile to know role
+                // Verify user role
                 const { data: profile } = await supabase
                     .from('profiles')
                     .select('role')
@@ -35,8 +74,13 @@ export default function LoginPage() {
                     .single();
 
                 const userRole = profile?.role || 'customer';
+
+                // Optional: Enforce role matching
+                // if (userRole !== currentRole) throw new Error("Unauthorized access for this role");
+
                 router.push(userRole === 'vendor' ? '/dashboard/vendor' : '/dashboard/customer');
             }
+            if (error) throw error;
 
         } catch (err: any) {
             setError(err.message);
@@ -46,48 +90,64 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[var(--charcoal)] via-black to-[var(--charcoal)] p-4 relative overflow-hidden">
-            {/* Background Ambience */}
-            <div className="absolute inset-0 opacity-20 pointer-events-none">
-                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full bg-[var(--primary)]/20 blur-[120px]" />
-                <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-[var(--gold)]/20 blur-[100px]" />
+        <div className={`min-h-screen flex items-center justify-center relative overflow-hidden transition-colors duration-500 ${currentRole === 'admin' ? 'bg-gray-50' : 'bg-[#FDFBF7]'}`}>
+
+            {/* Dynamic Background Ambience */}
+            <div className="absolute inset-0 opacity-30 pointer-events-none transition-all duration-1000">
+                <div className={`absolute top-[-20%] left-[-10%] w-[60%] h-[60%] rounded-full blur-[120px] bg-gradient-to-br ${theme.gradient} opacity-20`} />
+                <div className={`absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[100px] bg-gradient-to-tl ${theme.gradient} opacity-20`} />
             </div>
 
-            <div className="w-full max-w-md bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl relative z-10 animate-fadeInUp">
+            {/* Back to Home */}
+            <Link
+                href="/"
+                className={`absolute top-6 left-6 flex items-center gap-2 font-medium transition-colors z-20 ${theme.accent} hover:opacity-80`}
+            >
+                <svg className="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                الرئيسية
+            </Link>
+
+            <div className={`w-full max-w-md bg-white border border-gray-100 rounded-3xl p-8 shadow-2xl relative z-10 animate-fadeInUp ${currentRole === 'admin' ? 'border-t-4 border-t-[#1a1a1a]' : ''}`}>
                 <div className="text-center mb-8">
-                    <Link href="/" className="inline-block text-3xl font-serif font-bold bg-gradient-to-r from-[var(--gold)] to-white bg-clip-text text-transparent mb-2">
+                    <div className="text-4xl mb-4 animate-bounce-slow">{theme.icon}</div>
+                    <Link href="/" className={`inline-block text-3xl font-serif font-bold bg-gradient-to-r ${theme.gradient} bg-clip-text text-transparent mb-2`}>
                         Eventizer
                     </Link>
-                    <h2 className="text-white text-xl font-medium">تسجيل الدخول</h2>
+                    <h2 className={`text-xl font-bold ${theme.accent} mt-2`}>{theme.title}</h2>
                 </div>
 
-                <form onSubmit={handleLogin} className="space-y-4">
+
+
+                <form onSubmit={handleLogin} className="space-y-5">
                     <div>
-                        <label className="block text-white/80 text-sm mb-1 px-1">البريد الإلكتروني</label>
+                        <label className={`block text-sm font-medium mb-1.5 px-1 ${theme.accent}`}>البريد الإلكتروني</label>
                         <input
                             type="email"
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[var(--gold)] transition-colors"
+                            className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all focus:border-transparent ${currentRole === 'provider' ? 'focus:ring-[#6B7B5E]' : currentRole === 'admin' ? 'focus:ring-gray-800' : 'focus:ring-[#722F37]'}`}
                             placeholder="name@example.com"
                         />
                     </div>
 
                     <div>
-                        <label className="block text-white/80 text-sm mb-1 px-1">كلمة المرور</label>
+                        <label className={`block text-sm font-medium mb-1.5 px-1 ${theme.accent}`}>كلمة المرور</label>
                         <input
                             type="password"
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder-white/30 focus:outline-none focus:border-[var(--gold)] transition-colors"
+                            className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all focus:border-transparent ${currentRole === 'provider' ? 'focus:ring-[#6B7B5E]' : currentRole === 'admin' ? 'focus:ring-gray-800' : 'focus:ring-[#722F37]'}`}
                             placeholder="••••••••"
                         />
                     </div>
 
                     {error && (
-                        <div className="text-red-400 text-sm text-center bg-red-400/10 py-2 rounded-lg">
+                        <div className="text-red-500 text-sm text-center bg-red-50 py-3 rounded-xl border border-red-100 flex items-center justify-center gap-2">
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                             {error}
                         </div>
                     )}
@@ -95,19 +155,27 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-white text-black font-bold py-4 rounded-xl shadow-lg hover:shadow-white/20 hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+                        className={`w-full text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2 ${theme.buttonBg}`}
                     >
-                        {loading ? "جاري الدخول..." : "دخول"}
+                        {loading ? "جاري التحقق..." : "تسجيل الدخول"}
                     </button>
                 </form>
 
-                <p className="text-center text-white/50 text-sm mt-6">
+                <p className="text-center text-gray-400 text-sm mt-8">
                     ليس لديك حساب؟{" "}
-                    <Link href="/auth/signup" className="text-[var(--gold)] hover:underline">
+                    <Link href={`/auth/signup?role=${currentRole === 'provider' ? 'provider' : 'customer'}`} className={`font-semibold hover:underline ${theme.accent}`}>
                         أنشئ حساب جديد
                     </Link>
                 </p>
             </div>
         </div>
+    );
+}
+
+export default function LoginPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#FDFBF7]">جاري التحميل...</div>}>
+            <LoginContent />
+        </Suspense>
     );
 }

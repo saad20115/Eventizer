@@ -3,6 +3,7 @@
 
 
 import { useState, useEffect, useRef } from "react";
+import Link from 'next/link';
 import { z } from "zod";
 
 // Validation Schema
@@ -105,6 +106,7 @@ function LuxuryLogo() {
 function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<number | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -113,10 +115,18 @@ function Header() {
   }, []);
 
   const navLinks = [
-    { href: "#features", label: "المميزات" },
-    { href: "#how-it-works", label: "كيف يعمل" },
-    { href: "#categories", label: "الخدمات" },
-    { href: "#waitlist", label: "انضم إلينا" },
+    { label: "الرئيسية", href: "#", active: true },
+    { label: "المميزات", href: "#features" },
+    { label: "كيف يعمل", href: "#how-it-works" },
+    {
+      label: "تسجيل الدخول",
+      href: "#",
+      children: [
+        { label: "حساب العميل", href: "/auth/login?role=customer" },
+        { label: "حساب مقدم الخدمة", href: "/auth/login?role=provider" },
+        { label: "حساب مدير النظام", href: "/auth/login?role=admin" },
+      ]
+    },
   ];
 
   return (
@@ -131,18 +141,47 @@ function Header() {
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-8">
             {navLinks.map((link, i) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="relative text-[var(--charcoal)] font-medium hover:text-[var(--primary)] transition-all duration-300 group"
-                style={{ animationDelay: `${i * 0.1}s` }}
+              <div
+                key={i}
+                className="relative group"
+                onMouseEnter={() => setActiveDropdown(i)}
+                onMouseLeave={() => setActiveDropdown(null)}
               >
-                {link.label}
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-[var(--primary)] group-hover:w-full transition-all duration-300" />
-              </a>
+                <a
+                  href={link.href}
+                  className={`relative font-medium transition-all duration-300 py-2 flex items-center gap-1 ${link.active ? "text-[var(--primary)]" : "text-[var(--charcoal)] hover:text-[var(--primary)]"
+                    }`}
+                >
+                  {link.label}
+                  {link.children && (
+                    <svg className="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                  <span className={`absolute bottom-0 left-0 h-0.5 bg-[var(--primary)] transition-all duration-300 ${link.active ? 'w-full' : 'w-0 group-hover:w-full'}`} />
+                </a>
+
+                {/* Dropdown Menu */}
+                {link.children && (
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-56 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+                    <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-xl border border-[var(--gold)]/20 overflow-hidden">
+                      {link.children.map((subLink, j) => (
+                        <a
+                          key={j}
+                          href={subLink.href}
+                          className="block px-4 py-3 text-sm text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--primary)] transition-colors text-right border-b border-gray-50 last:border-0"
+                        >
+                          {subLink.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
-            <a href="#waitlist" className="btn-primary group">
+            <a href="/auth/signup" className="btn-primary group">
               <span className="relative z-10">ابدأ الآن</span>
+              <div className="absolute inset-0 bg-[var(--primary-dark)] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
             </a>
           </div>
 
@@ -160,16 +199,37 @@ function Header() {
         <div className={`md:hidden overflow-hidden transition-all duration-500 ${mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="bg-white/95 backdrop-blur-lg rounded-2xl p-6 mb-4 shadow-xl">
             {navLinks.map((link, i) => (
-              <a
-                key={link.href}
-                href={link.href}
-                className="block py-3 text-[var(--charcoal)] font-medium hover:text-[var(--primary)] hover:pr-4 transition-all duration-300"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                {link.label}
-              </a>
+              <div key={i}>
+                {!link.children ? (
+                  <a
+                    href={link.href}
+                    className="block py-3 text-[var(--charcoal)] font-medium hover:text-[var(--primary)] hover:pr-4 transition-all duration-300 border-b border-gray-100 last:border-0"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <div className="py-2 border-b border-gray-100 last:border-0">
+                    <div className="text-[var(--charcoal)] font-medium mb-2 pr-2">{link.label}</div>
+                    <div className="pr-4 space-y-2 border-r-2 border-[var(--gold)]/20 mr-2 bg-gray-50/50 rounded-lg p-2">
+                      {link.children.map((subLink, j) => (
+                        <a
+                          key={j}
+                          href={subLink.href}
+                          className="block py-2 text-sm text-[var(--muted)] hover:text-[var(--primary)] transition-colors"
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {subLink.label}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             ))}
+            <Link href="/auth/signup" className="block w-full text-center mt-4 btn-primary" onClick={() => setMobileMenuOpen(false)}>
+              ابدأ الآن
+            </Link>
           </div>
         </div>
       </div>
@@ -484,14 +544,14 @@ function HowItWorksSection() {
 // ===== CATEGORIES =====
 function CategoriesSection() {
   const categories = [
-    { name: "التصوير", icon: "📷", image: "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=300&h=300&fit=crop" },
-    { name: "الضيافة", icon: "🍽️", image: "https://images.unsplash.com/photo-1555244162-803834f70033?w=300&h=300&fit=crop" },
-    { name: "القاعات", icon: "🏛️", image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=300&h=300&fit=crop" },
-    { name: "الزهور", icon: "💐", image: "https://images.unsplash.com/photo-1561128290-005859e95012?w=300&h=300&fit=crop" },
-    { name: "الموسيقى", icon: "🎵", image: "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=300&h=300&fit=crop" },
-    { name: "الحلويات", icon: "🎂", image: "https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=300&h=300&fit=crop" },
-    { name: "الكوش", icon: "💒", image: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?w=300&h=300&fit=crop" },
-    { name: "الهدايا", icon: "🎁", image: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=300&h=300&fit=crop" },
+    { name: "التصوير", image: "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=600&h=600&fit=crop" },
+    { name: "الضيافة", image: "https://images.unsplash.com/photo-1555244162-803834f70033?w=600&h=600&fit=crop" },
+    { name: "القاعات", image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=600&h=600&fit=crop" },
+    { name: "الزهور", image: "/images/fnp-bouquet-50.jpg" },
+    { name: "الموسيقى", image: "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=600&h=600&fit=crop" },
+    { name: "الحلويات", image: "https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=600&h=600&fit=crop" },
+    { name: "الكوش", image: "/images/kosha-hia-2020.jpg" },
+    { name: "الهدايا", image: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&h=600&fit=crop" },
   ];
 
   return (
@@ -512,12 +572,11 @@ function CategoriesSection() {
               className="group cursor-pointer animate-fadeInUp"
               style={{ animationDelay: `${0.1 * i}s` }}
             >
-              <div className="relative h-56 rounded-3xl overflow-hidden shadow-lg group-hover:shadow-2xl transition-all duration-500 group-hover:-translate-y-2">
+              <div className="relative h-64 rounded-3xl overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-500 group-hover:-translate-y-2">
                 <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent group-hover:from-[var(--primary)]/80 transition-all duration-500" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                  <span className="text-4xl mb-2 group-hover:scale-125 group-hover:animate-bounce transition-all duration-500">{cat.icon}</span>
-                  <span className="font-bold text-lg">{cat.name}</span>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-all duration-500" />
+                <div className="absolute inset-0 flex flex-col items-center justify-end pb-6 text-white">
+                  <span className="font-bold text-xl">{cat.name}</span>
                 </div>
               </div>
             </div>
@@ -764,7 +823,8 @@ function Footer() {
             <ul className="space-y-3 text-[var(--muted)]">
               <li className="flex items-center gap-2 hover:text-[var(--gold)] transition-colors">📧 info@eventizer.sa</li>
               <li className="flex items-center gap-2 hover:text-[var(--gold)] transition-colors">📱 +966 50 000 0000</li>
-              <li className="flex items-center gap-2 hover:text-[var(--gold)] transition-colors">📍 الرياض، السعودية</li>
+              <li className="flex items-center gap-2 hover:text-[var(--gold)] transition-colors">📍 مكة المكرمة - السعودية</li>
+              <li className="flex items-center gap-2 mt-4 text-[var(--gold)] font-medium text-sm">❤️ صنع بحب في المملكة العربية السعودية</li>
             </ul>
           </div>
         </div>
