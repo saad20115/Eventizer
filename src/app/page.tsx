@@ -195,29 +195,34 @@ function Header() {
 
       {/* Mobile Menu Panel */}
       <div className={`fixed top-0 ${language === 'ar' ? 'right-0' : 'left-0'} h-full w-[85%] max-w-xs sm:max-w-sm bg-white shadow-2xl z-50 transform transition-transform duration-300 md:hidden ${mobileMenuOpen ? "translate-x-0" : (language === 'ar' ? "translate-x-full" : "-translate-x-full")} overflow-y-auto`}>
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-8">
+        <div className="p-6 h-full flex flex-col">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-6 pb-4 border-b-2 border-gray-100">
             <LuxuryLogo />
-            <button onClick={() => setMobileMenuOpen(false)} className="text-[var(--muted)] hover:text-[var(--primary)]">
+            <button onClick={() => setMobileMenuOpen(false)} className="text-[var(--muted)] hover:text-[var(--primary)] p-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           </div>
 
-          <div className="flex flex-col gap-2">
-            {navLinks.map((link, i) => (
-              <a
-                key={i}
-                href={link.href}
-                className="text-base font-semibold text-[var(--charcoal)] py-3 px-4 border-b border-gray-200 hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-lg transition-all"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.label}
-              </a>
-            ))}
+          {/* Navigation Links */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="space-y-1 mb-4">
+              {navLinks.map((link, i) => (
+                <a
+                  key={i}
+                  href={link.href}
+                  className="block text-base font-semibold text-[var(--charcoal)] py-3 px-4 border-l-4 border-transparent hover:border-[var(--primary)] hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-r-lg transition-all"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
 
-            <div className="pt-4 mt-2 border-t-2 border-gray-200 flex flex-col gap-3">
+            {/* Language Toggle */}
+            <div className="pt-4 mt-4 border-t-2 border-gray-200">
               <button
                 onClick={() => { toggleLanguage(); setMobileMenuOpen(false); }}
                 className="w-full px-4 py-3 rounded-lg bg-gray-100 hover:bg-[var(--cream)] text-base font-semibold text-[var(--charcoal)] hover:text-[var(--primary)] transition-all flex items-center justify-center gap-2"
@@ -227,17 +232,21 @@ function Header() {
                 </svg>
                 <span>{language === 'ar' ? 'English' : 'العربية'}</span>
               </button>
-              <div className="space-y-3 pt-3">
-                <div className="text-gray-600 text-sm font-bold px-4 pb-2">{t.nav.login}</div>
-                <Link href="/auth/login?role=customer" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-lg transition-all">
+            </div>
+
+            {/* Login Section */}
+            <div className="pt-4 mt-4 border-t-2 border-gray-200">
+              <div className="text-gray-600 text-sm font-bold px-4 pb-3">{t.nav.login}</div>
+              <div className="space-y-2">
+                <Link href="/auth/login?role=customer" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-lg transition-all border border-gray-100">
                   <span className="text-xl">🎉</span>
                   <span>{language === 'ar' ? 'دخول العملاء' : 'Customer Login'}</span>
                 </Link>
-                <Link href="/auth/login?role=provider" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-lg transition-all">
+                <Link href="/auth/login?role=provider" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-lg transition-all border border-gray-100">
                   <span className="text-xl">🏪</span>
                   <span>{language === 'ar' ? 'مقدمي الخدمة' : 'Service Provider'}</span>
                 </Link>
-                <Link href="/auth/login?role=admin" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-lg transition-all">
+                <Link href="/auth/login?role=admin" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-lg transition-all border border-gray-100">
                   <span className="text-xl">🛡️</span>
                   <span>{language === 'ar' ? 'مدير النظام' : 'System Admin'}</span>
                 </Link>
