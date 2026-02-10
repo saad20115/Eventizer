@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "@/context/LanguageContext";
+import { DirectionUpdater } from "@/components/DirectionUpdater";
 
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],
@@ -29,7 +31,10 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl" className={tajawal.variable}>
       <body className="font-[family-name:var(--font-tajawal)] antialiased">
-        {children}
+        <LanguageProvider>
+          <DirectionUpdater />
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

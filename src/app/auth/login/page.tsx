@@ -4,11 +4,13 @@ import { useState, useEffect, Suspense } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
 
 function LoginContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const roleParam = searchParams.get('role');
+    const { t, language } = useLanguage();
 
     // Default to 'customer' if no role specified or invalid
     const [currentRole, setCurrentRole] = useState<'customer' | 'provider' | 'admin'>('customer');
@@ -27,7 +29,7 @@ function LoginContent() {
     // Theme Config based on Role
     const themes = {
         customer: {
-            title: "تسجيل دخول العملاء",
+            title: t.auth.customerTitle,
             gradient: "from-[#722F37] to-[#D4AF37]", // Burgundy to Gold
             buttonBg: "bg-[#722F37] hover:bg-[#59242b]",
             accent: "text-[#722F37]",
@@ -35,7 +37,7 @@ function LoginContent() {
             icon: "🎉"
         },
         provider: {
-            title: "بوابة مقدمي الخدمة",
+            title: t.auth.providerTitle,
             gradient: "from-[#6B7B5E] to-[#2C3E50]", // Sage to Navy
             buttonBg: "bg-[#6B7B5E] hover:bg-[#55634a]",
             accent: "text-[#6B7B5E]",
@@ -43,7 +45,7 @@ function LoginContent() {
             icon: "🏪"
         },
         admin: {
-            title: "لوحة تحكم الإدارة",
+            title: t.auth.adminTitle,
             gradient: "from-[#1a1a1a] to-[#4a4a4a]", // Dark Grayscale
             buttonBg: "bg-[#1a1a1a] hover:bg-[#333]",
             accent: "text-[#1a1a1a]",
@@ -101,12 +103,12 @@ function LoginContent() {
             {/* Back to Home */}
             <Link
                 href="/"
-                className={`absolute top-6 left-6 flex items-center gap-2 font-medium transition-colors z-20 ${theme.accent} hover:opacity-80`}
+                className={`absolute top-6 ${language === 'ar' ? 'left-6' : 'right-6'} flex items-center gap-2 font-medium transition-colors z-20 ${theme.accent} hover:opacity-80`}
             >
-                <svg className="w-5 h-5 rtl:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-5 h-5 ${language === 'ar' ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
-                الرئيسية
+                {t.auth.backToHome}
             </Link>
 
             <div className={`w-full max-w-md bg-white border border-gray-100 rounded-3xl p-8 shadow-2xl relative z-10 animate-fadeInUp ${currentRole === 'admin' ? 'border-t-4 border-t-[#1a1a1a]' : ''}`}>
@@ -122,26 +124,26 @@ function LoginContent() {
 
                 <form onSubmit={handleLogin} className="space-y-5">
                     <div>
-                        <label className={`block text-sm font-medium mb-1.5 px-1 ${theme.accent}`}>البريد الإلكتروني</label>
+                        <label className={`block text-sm font-medium mb-1.5 px-1 ${theme.accent}`}>{t.auth.emailLabel}</label>
                         <input
                             type="email"
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all focus:border-transparent ${currentRole === 'provider' ? 'focus:ring-[#6B7B5E]' : currentRole === 'admin' ? 'focus:ring-gray-800' : 'focus:ring-[#722F37]'}`}
-                            placeholder="name@example.com"
+                            placeholder={t.auth.emailPlaceholder}
                         />
                     </div>
 
                     <div>
-                        <label className={`block text-sm font-medium mb-1.5 px-1 ${theme.accent}`}>كلمة المرور</label>
+                        <label className={`block text-sm font-medium mb-1.5 px-1 ${theme.accent}`}>{t.auth.passwordLabel}</label>
                         <input
                             type="password"
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all focus:border-transparent ${currentRole === 'provider' ? 'focus:ring-[#6B7B5E]' : currentRole === 'admin' ? 'focus:ring-gray-800' : 'focus:ring-[#722F37]'}`}
-                            placeholder="••••••••"
+                            placeholder={t.auth.passwordPlaceholder}
                         />
                     </div>
 
@@ -157,14 +159,14 @@ function LoginContent() {
                         disabled={loading}
                         className={`w-full text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.01] transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-2 ${theme.buttonBg}`}
                     >
-                        {loading ? "جاري التحقق..." : "تسجيل الدخول"}
+                        {loading ? t.auth.loadingLogin : t.auth.loginButton}
                     </button>
                 </form>
 
                 <p className="text-center text-gray-400 text-sm mt-8">
-                    ليس لديك حساب؟{" "}
+                    {t.auth.noAccount}{" "}
                     <Link href={`/auth/signup?role=${currentRole === 'provider' ? 'provider' : 'customer'}`} className={`font-semibold hover:underline ${theme.accent}`}>
-                        أنشئ حساب جديد
+                        {t.auth.signupTitle}
                     </Link>
                 </p>
             </div>
@@ -174,7 +176,7 @@ function LoginContent() {
 
 export default function LoginPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#FDFBF7]">جاري التحميل...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-[#FDFBF7]">Loading...</div>}>
             <LoginContent />
         </Suspense>
     );

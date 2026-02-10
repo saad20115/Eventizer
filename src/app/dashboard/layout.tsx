@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function DashboardLayout({
     children,
@@ -12,6 +13,7 @@ export default function DashboardLayout({
 }) {
     const router = useRouter();
     const pathname = usePathname();
+    const { t, direction, language } = useLanguage();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -43,10 +45,10 @@ export default function DashboardLayout({
     const isVendor = pathname.includes('/vendor');
 
     return (
-        <div className="min-h-screen bg-gray-50 flex" dir="rtl">
+        <div className="min-h-screen bg-gray-50 flex" dir={direction}>
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 right-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "translate-x-full"
+                className={`fixed inset-y-0 ${language === 'ar' ? 'right-0' : 'left-0'} z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 lg:transform-none ${sidebarOpen ? "translate-x-0" : (language === 'ar' ? "translate-x-full" : "-translate-x-full")
                     } lg:static lg:block`}
             >
                 <div className="h-full flex flex-col">
@@ -60,29 +62,29 @@ export default function DashboardLayout({
                     {/* Nav Links */}
                     <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                         <div className="text-xs font-bold text-gray-400 px-4 py-2 uppercase tracking-wider">
-                            {isVendor ? "لوحة التاجر" : "لوحة العميل"}
+                            {isVendor ? t.dashboard.vendorPanel : t.dashboard.customerPanel}
                         </div>
 
                         <Link
                             href={isVendor ? "/dashboard/vendor" : "/dashboard/customer"}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${pathname === (isVendor ? "/dashboard/vendor" : "/dashboard/customer")
-                                    ? "bg-[var(--primary)] text-white shadow-md"
-                                    : "text-gray-600 hover:bg-gray-100"
+                                ? "bg-[var(--primary)] text-white shadow-md"
+                                : "text-gray-600 hover:bg-gray-100"
                                 }`}
                         >
                             <span>📊</span>
-                            <span>الرئيسية</span>
+                            <span>{t.dashboard.home}</span>
                         </Link>
 
                         <Link
                             href={isVendor ? "/dashboard/vendor/requests" : "/dashboard/customer/bookings"}
                             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${pathname.includes("requests") || pathname.includes("bookings")
-                                    ? "bg-[var(--primary)] text-white shadow-md"
-                                    : "text-gray-600 hover:bg-gray-100"
+                                ? "bg-[var(--primary)] text-white shadow-md"
+                                : "text-gray-600 hover:bg-gray-100"
                                 }`}
                         >
                             <span>{isVendor ? "📨" : "📅"}</span>
-                            <span>{isVendor ? "الطلبات الواردة" : "حجوزاتي"}</span>
+                            <span>{isVendor ? t.dashboard.requests : t.dashboard.bookings}</span>
                         </Link>
 
                         <Link
@@ -90,7 +92,7 @@ export default function DashboardLayout({
                             className="flex items-center gap-3 px-4 py-3 rounded-xl text-gray-600 hover:bg-gray-100 transition-all"
                         >
                             <span>⚙️</span>
-                            <span>الإعدادات</span>
+                            <span>{t.dashboard.settings}</span>
                         </Link>
                     </nav>
 
@@ -101,7 +103,7 @@ export default function DashboardLayout({
                                 👤
                             </div>
                             <div className="overflow-hidden">
-                                <div className="font-bold truncate text-sm">{user.user_metadata?.full_name || "مستخدم"}</div>
+                                <div className="font-bold truncate text-sm">{user.user_metadata?.full_name || t.dashboard.user}</div>
                                 <div className="text-xs text-gray-500 truncate">{user.email}</div>
                             </div>
                         </div>
@@ -110,7 +112,7 @@ export default function DashboardLayout({
                             className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium transition-colors"
                         >
                             <span>🚪</span>
-                            تسجيل الخروج
+                            {t.dashboard.logout}
                         </button>
                     </div>
                 </div>
