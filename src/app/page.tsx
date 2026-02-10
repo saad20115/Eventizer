@@ -194,7 +194,7 @@ function Header() {
       <div className={`fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300 md:hidden ${mobileMenuOpen ? "opacity-100 visible" : "opacity-0 invisible"}`} onClick={() => setMobileMenuOpen(false)} />
 
       {/* Mobile Menu Panel */}
-      <div className={`fixed top-0 ${language === 'ar' ? 'right-0' : 'left-0'} h-full w-[80%] max-w-sm bg-white shadow-2xl z-50 transform transition-transform duration-300 md:hidden ${mobileMenuOpen ? "translate-x-0" : (language === 'ar' ? "translate-x-full" : "-translate-x-full")} overflow-y-auto`}>
+      <div className={`fixed top-0 ${language === 'ar' ? 'right-0' : 'left-0'} h-full w-[85%] max-w-xs sm:max-w-sm bg-white shadow-2xl z-50 transform transition-transform duration-300 md:hidden ${mobileMenuOpen ? "translate-x-0" : (language === 'ar' ? "translate-x-full" : "-translate-x-full")} overflow-y-auto`}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-8">
             <LuxuryLogo />
@@ -363,9 +363,9 @@ function HeroSection() {
               </a>
             </div>
 
-            {/* Stats */}
+            {/* Quick Stats */}
             <div
-              className={`flex items-center gap-8 mt-14 justify-center ${language === 'ar' ? 'lg:justify-start' : 'lg:justify-start'} animate-fadeInUp`}
+              className={`flex flex-wrap items-center gap-4 sm:gap-8 mt-14 justify-center ${language === 'ar' ? 'lg:justify-start' : 'lg:justify-start'} animate-fadeInUp`}
               style={{ animationDelay: '0.6s' }}
             >
               {[

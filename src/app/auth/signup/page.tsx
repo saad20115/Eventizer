@@ -74,7 +74,7 @@ function SignupContent() {
             {/* Back to Home Button */}
             <Link
                 href="/"
-                className={`absolute top-6 ${language === 'ar' ? 'left-6' : 'right-6'} flex items-center gap-2 font-medium transition-colors z-20 hover:opacity-80`}
+                className={`absolute top-4 sm:top-6 ${language === 'ar' ? 'left-4 sm:left-6' : 'right-4 sm:right-6'} flex items-center gap-2 text-sm sm:text-base font-medium transition-colors z-20 hover:opacity-80`}
                 style={{ color: themeColor }}
             >
                 <svg className={`w-5 h-5 ${language === 'ar' ? 'rotate-0' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +83,7 @@ function SignupContent() {
                 {t.auth.backToHome}
             </Link>
 
-            <div className={`w-full max-w-md bg-white border border-gray-100 rounded-3xl p-8 shadow-xl relative z-10 animate-fadeInUp ${isVendor ? 'border-t-4 border-t-[var(--secondary)]' : 'border-t-4 border-t-[var(--primary)]'}`}>
+            <div className={`w-full max-w-md mx-4 bg-white border border-gray-100 rounded-3xl p-6 sm:p-8 shadow-xl relative z-10 animate-fadeInUp ${isVendor ? 'border-t-4 border-t-[var(--secondary)]' : 'border-t-4 border-t-[var(--primary)]'}`}>
                 <div className="text-center mb-6">
                     <Link href="/" className={`inline-block text-3xl font-serif font-bold bg-gradient-to-r ${themeGradient} bg-clip-text text-transparent mb-2`}>
                         Eventizer
