@@ -205,39 +205,39 @@ function Header() {
             </button>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             {navLinks.map((link, i) => (
               <a
                 key={i}
                 href={link.href}
-                className="text-lg font-medium text-[var(--charcoal)] py-2 border-b border-gray-100"
+                className="text-base font-semibold text-[var(--charcoal)] py-3 px-4 border-b border-gray-200 hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-lg transition-all"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 {link.label}
               </a>
             ))}
 
-            <div className="pt-4 mt-2 border-t border-gray-100 flex flex-col gap-4">
+            <div className="pt-4 mt-2 border-t-2 border-gray-200 flex flex-col gap-3">
               <button
                 onClick={() => { toggleLanguage(); setMobileMenuOpen(false); }}
-                className="text-lg font-medium text-[var(--charcoal)] text-right flex items-center justify-end gap-2"
+                className="w-full px-4 py-3 rounded-lg bg-gray-100 hover:bg-[var(--cream)] text-base font-semibold text-[var(--charcoal)] hover:text-[var(--primary)] transition-all flex items-center justify-center gap-2"
               >
-                <span>{language === 'ar' ? 'English' : 'العربية'}</span>
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129" />
                 </svg>
+                <span>{language === 'ar' ? 'English' : 'العربية'}</span>
               </button>
-              <div className="space-y-4 pt-2">
-                <div className="text-gray-400 text-sm font-bold border-b border-gray-100 pb-2">{t.nav.login}</div>
-                <Link href="/auth/login?role=customer" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-base font-medium text-[var(--charcoal)] hover:text-[var(--primary)] transition-colors">
+              <div className="space-y-3 pt-3">
+                <div className="text-gray-600 text-sm font-bold px-4 pb-2">{t.nav.login}</div>
+                <Link href="/auth/login?role=customer" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-lg transition-all">
                   <span className="text-xl">🎉</span>
                   <span>{language === 'ar' ? 'دخول العملاء' : 'Customer Login'}</span>
                 </Link>
-                <Link href="/auth/login?role=provider" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-base font-medium text-[var(--charcoal)] hover:text-[var(--primary)] transition-colors">
+                <Link href="/auth/login?role=provider" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-lg transition-all">
                   <span className="text-xl">🏪</span>
                   <span>{language === 'ar' ? 'مقدمي الخدمة' : 'Service Provider'}</span>
                 </Link>
-                <Link href="/auth/login?role=admin" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 text-base font-medium text-[var(--charcoal)] hover:text-[var(--primary)] transition-colors">
+                <Link href="/auth/login?role=admin" onClick={() => setMobileMenuOpen(false)} className="flex items-center gap-3 px-4 py-3 text-base font-semibold text-[var(--charcoal)] hover:bg-[var(--cream)] hover:text-[var(--primary)] rounded-lg transition-all">
                   <span className="text-xl">🛡️</span>
                   <span>{language === 'ar' ? 'مدير النظام' : 'System Admin'}</span>
                 </Link>
