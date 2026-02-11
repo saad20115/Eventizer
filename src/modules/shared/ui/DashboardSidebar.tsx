@@ -91,11 +91,20 @@ export default function DashboardSidebar({ role, user, onSignOut }: DashboardSid
         return t.dashboard.adminPanel;
     };
 
+    const scrollToTop = (e: React.MouseEvent) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
     return (
         <div className="h-full flex flex-col bg-white border-r border-gray-100" dir={direction}>
             {/* Header */}
             <div className={`p-6 border-b ${currentTheme.border}`}>
-                <Link href="/" className="block text-2xl font-serif font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] bg-clip-text text-transparent mb-1 transition-opacity hover:opacity-80">
+                <Link
+                    href="/"
+                    onClick={scrollToTop}
+                    className="block text-2xl font-serif font-bold bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] bg-clip-text text-transparent mb-1 transition-opacity hover:opacity-80 cursor-pointer"
+                >
                     Eventizer
                 </Link>
                 <div

@@ -33,13 +33,22 @@ export default function Header() {
         console.log('mobileMenuOpen:', mobileMenuOpen);
     }, [mobileMenuOpen]);
 
+    const scrollToTop = (e: React.MouseEvent) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
     return (
         <header className={`header ${scrolled ? "header-solid" : "header-transparent"} fixed top-0 left-0 right-0 z-50 transition-all duration-300`}>
             <div className="container mx-auto px-4">
                 <nav className="flex items-center justify-between py-4">
                     {/* Logo Section */}
                     <div className="flex-shrink-0 w-48">
-                        <Link href="/" className="flex items-center gap-3 group">
+                        <Link
+                            href="/"
+                            onClick={scrollToTop}
+                            className="flex items-center gap-3 group cursor-pointer"
+                        >
                             <LuxuryLogo />
                         </Link>
                     </div>
