@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/modules/shared/config/supabase';
-import { FullSurvey, SurveyResponse } from '@/modules/surveys/types';
+import { FullSurvey, SurveyResponse, SurveyAnswer } from '@/modules/surveys/types';
 import { useParams } from 'next/navigation';
 
 import { useLanguage } from '@/context/LanguageContext';
@@ -17,7 +17,7 @@ export default function AdminSurveyResults() {
 
     const [survey, setSurvey] = useState<FullSurvey | null>(null);
     const [responses, setResponses] = useState<SurveyResponse[]>([]);
-    const [answers, setAnswers] = useState<any[]>([]); // simplified for MVP, ideally SurveyAnswer[]
+    const [answers, setAnswers] = useState<SurveyAnswer[]>([]); // simplified for MVP, ideally SurveyAnswer[]
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'analysis' | 'responses'>('analysis');
     const containerRef = useRef<HTMLDivElement>(null);
@@ -125,7 +125,7 @@ export default function AdminSurveyResults() {
     // Helper to prepare data for export
     const prepareExportData = () => {
         return responses.map(r => {
-            const row: Record<string, any> = {
+            const row: Record<string, string | number | boolean | null> = {
                 'Response ID': r.id,
                 'Date': new Date(r.created_at).toLocaleDateString(),
             };
@@ -177,11 +177,10 @@ export default function AdminSurveyResults() {
             const canvas = await html2canvas(clone, {
                 scale: 2, // Improve resolution
                 useCORS: true,
-                logging: false,
                 backgroundColor: '#ffffff',
                 windowWidth: clone.scrollWidth,
                 windowHeight: clone.scrollHeight
-            });
+            } as any);
 
             // Cleanup clone
             document.body.removeChild(clone);
@@ -215,9 +214,10 @@ export default function AdminSurveyResults() {
 
             pdf.save(`${survey?.title || 'Survey_Report'}.pdf`);
 
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Error generating PDF", err);
-            alert(`${t.dashboard.surveys.reports.error}: ${err?.message || err}`);
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            alert(`${t.dashboard.surveys.reports.error}: ${errorMessage}`);
         }
     };
 
@@ -403,7 +403,7 @@ export default function AdminSurveyResults() {
                                     <div className="space-y-2 max-h-60 overflow-y-auto bg-gray-50 p-4 rounded-lg">
                                         {answers.filter(a => a.question_id === q.id).map((a, i) => (
                                             <div key={i} className="text-sm p-3 border-b border-gray-100 last:border-0 bg-white rounded shadow-sm mb-2 text-gray-700">
-                                                "{a.answer_text}"
+                                                &quot;{a.answer_text}&quot;
                                             </div>
                                         ))}
                                         {answers.filter(a => a.question_id === q.id).length === 0 && <span className="text-gray-400 text-sm">{t.dashboard.surveys.table.noTextAnswers}</span>}
