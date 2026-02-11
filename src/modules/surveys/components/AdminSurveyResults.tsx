@@ -171,21 +171,20 @@ export default function AdminSurveyResults() {
 
             document.body.appendChild(clone);
 
-            // Dynamically import html2canvas to avoid SSR issues
-            const html2canvas = (await import('html2canvas')).default;
+            // Dynamically import html-to-image
+            const { toPng } = await import('html-to-image');
 
-            const canvas = await html2canvas(clone, {
-                scale: 2, // Improve resolution
-                useCORS: true,
+            const dataUrl = await toPng(clone, {
+                cacheBust: true,
                 backgroundColor: '#ffffff',
-                windowWidth: clone.scrollWidth,
-                windowHeight: clone.scrollHeight
-            } as any);
+                canvasWidth: clone.scrollWidth,
+                canvasHeight: clone.scrollHeight
+            });
 
             // Cleanup clone
             document.body.removeChild(clone);
 
-            const imgData = canvas.toDataURL('image/png');
+            const imgData = dataUrl;
             const pdf = new jsPDF({
                 orientation: 'p',
                 unit: 'mm',

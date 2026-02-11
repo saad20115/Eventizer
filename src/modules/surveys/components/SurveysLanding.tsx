@@ -54,6 +54,14 @@ export default function SurveysLanding() {
                     </div>
                 </Link>
             </div>
+
+            <Link
+                href="/"
+                className="mt-12 px-8 py-3 rounded-full bg-white border border-gray-200 text-gray-600 hover:border-[var(--primary)] hover:text-[var(--primary)] transition-all flex items-center gap-2 font-medium shadow-sm hover:shadow-md"
+            >
+                <span>🏠</span>
+                <span>{direction === 'rtl' ? 'العودة للصفحة الرئيسية' : 'Back to Home'}</span>
+            </Link>
         </div>
     );
 }

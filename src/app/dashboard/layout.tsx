@@ -57,7 +57,7 @@ export default function DashboardLayout({
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 flex" dir={direction}>
+        <div className="h-screen overflow-hidden bg-gray-50 flex" dir={direction}>
             {/* Sidebar */}
             <aside
                 className={`fixed inset-y-0 ${direction === 'rtl' ? 'right-0' : 'left-0'} z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 lg:transform-none lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : (direction === 'rtl' ? "translate-x-full" : "-translate-x-full")

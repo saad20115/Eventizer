@@ -13,10 +13,10 @@ function LoginContent() {
     const { t, language } = useLanguage();
 
     // Default to 'customer' if no role specified or invalid
-    const [currentRole, setCurrentRole] = useState<'customer' | 'provider' | 'admin'>('customer');
+    const [currentRole, setCurrentRole] = useState<'customer' | 'vendor' | 'admin'>('customer');
 
     useEffect(() => {
-        if (roleParam === 'provider') setCurrentRole('provider');
+        if (roleParam === 'provider' || roleParam === 'vendor') setCurrentRole('vendor');
         else if (roleParam === 'admin') setCurrentRole('admin');
         else setCurrentRole('customer');
     }, [roleParam]);
@@ -36,8 +36,8 @@ function LoginContent() {
             bgOverlay: "bg-[#722F37]/5",
             icon: "🎉"
         },
-        provider: {
-            title: t.auth.providerTitle,
+        vendor: {
+            title: t.auth.providerTitle, // Keeping translation key for now if it exists
             gradient: "from-[#6B7B5E] to-[#2C3E50]", // Sage to Navy
             buttonBg: "bg-[#6B7B5E] hover:bg-[#55634a]",
             accent: "text-[#6B7B5E]",
@@ -130,7 +130,7 @@ function LoginContent() {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all focus:border-transparent ${currentRole === 'provider' ? 'focus:ring-[#6B7B5E]' : currentRole === 'admin' ? 'focus:ring-gray-800' : 'focus:ring-[#722F37]'}`}
+                            className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all focus:border-transparent ${currentRole === 'vendor' ? 'focus:ring-[#6B7B5E]' : currentRole === 'admin' ? 'focus:ring-gray-800' : 'focus:ring-[#722F37]'}`}
                             placeholder={t.auth.emailPlaceholder}
                         />
                     </div>
@@ -142,7 +142,7 @@ function LoginContent() {
                             required
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all focus:border-transparent ${currentRole === 'provider' ? 'focus:ring-[#6B7B5E]' : currentRole === 'admin' ? 'focus:ring-gray-800' : 'focus:ring-[#722F37]'}`}
+                            className={`w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3.5 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-opacity-50 transition-all focus:border-transparent ${currentRole === 'vendor' ? 'focus:ring-[#6B7B5E]' : currentRole === 'admin' ? 'focus:ring-gray-800' : 'focus:ring-[#722F37]'}`}
                             placeholder={t.auth.passwordPlaceholder}
                         />
                     </div>
@@ -165,7 +165,7 @@ function LoginContent() {
 
                 <p className="text-center text-gray-400 text-sm mt-8">
                     {t.auth.noAccount}{" "}
-                    <Link href={`/auth/signup?role=${currentRole === 'provider' ? 'provider' : 'customer'}`} className={`font-semibold hover:underline ${theme.accent}`}>
+                    <Link href={`/auth/signup?role=${currentRole === 'vendor' ? 'vendor' : 'customer'}`} className={`font-semibold hover:underline ${theme.accent}`}>
                         {t.auth.signupTitle}
                     </Link>
                 </p>
