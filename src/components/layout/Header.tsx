@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from 'next/link';
 import { useLanguage } from "@/context/LanguageContext";
 import LuxuryLogo from "@/components/ui/LuxuryLogo";
@@ -16,7 +16,7 @@ export default function Header() {
         return () => window.removeEventListener("scroll", handleScroll);
     }, []);
 
-    const navLinks = [
+    const navLinks = useMemo(() => [
         { label: t.nav.home, href: "/#home" },
         { label: "سوق المناسبات", href: "/market" }, // New Market Link - TODO: Translate
         { label: t.nav.features, href: "/#features" },
@@ -25,13 +25,13 @@ export default function Header() {
         { label: t.nav.about, href: "/#about" },
         { label: t.nav.surveys, href: "/surveys" },
         { label: t.nav.contact, href: "/#contact" },
-    ];
+    ], [t]);
 
     // Debug logging
     useEffect(() => {
         console.log('navLinks:', navLinks);
         console.log('mobileMenuOpen:', mobileMenuOpen);
-    }, [mobileMenuOpen]);
+    }, [mobileMenuOpen, navLinks]);
 
     const scrollToTop = (e: React.MouseEvent) => {
         e.preventDefault();

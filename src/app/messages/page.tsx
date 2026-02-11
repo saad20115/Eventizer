@@ -1,10 +1,19 @@
 "use client";
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import Header from "@/components/layout/Header";
-import { useConversations, useMessages, ChatConversation } from "@/hooks/useChat";
+import { useConversations, useMessages } from "@/hooks/useChat";
+import { Conversation } from "@/types/market";
 import { useSearchParams } from 'next/navigation';
 
 export default function MessagesPage() {
+    return (
+        <Suspense fallback={<div className="h-screen flex items-center justify-center bg-gray-50 text-gray-400">جاري تحميل الرسائل...</div>}>
+            <MessagesContent />
+        </Suspense>
+    );
+}
+
+function MessagesContent() {
     const { conversations, loading: loadingConvs, userId } = useConversations();
     const [selectedConvId, setSelectedConvId] = useState<string | null>(null);
     const searchParams = useSearchParams();
@@ -38,7 +47,7 @@ export default function MessagesPage() {
                                 <div className="p-4 text-center text-gray-400">لا توجد محادثات</div>
                             ) : (
                                 conversations.map(conv => {
-                                    const otherUser = userId === conv.vendor_id ? conv.customer : conv.vendor;
+                                    const otherUser = conv.other_party;
                                     const isActive = conv.id === selectedConvId;
                                     return (
                                         <div
@@ -60,10 +69,10 @@ export default function MessagesPage() {
                                                     <div className="flex justify-between items-start mb-1">
                                                         <h4 className="font-bold text-gray-800 truncate">{otherUser?.full_name || 'مستخدم'}</h4>
                                                         <span className="text-xs text-gray-400 whitespace-nowrap">
-                                                            {conv.last_message_time ? new Date(conv.last_message_time).toLocaleDateString() : ''}
+                                                            {conv.last_message_at ? new Date(conv.last_message_at).toLocaleDateString() : ''}
                                                         </span>
                                                     </div>
-                                                    <p className="text-sm text-gray-500 truncate">{conv.last_message || 'لا توجد رسائل بعد'}</p>
+                                                    <p className="text-sm text-gray-500 truncate">{conv.messages?.[0]?.content || 'لا توجد رسائل بعد'}</p>
                                                     <span className="inline-block mt-1 px-2 py-0.5 bg-gray-100 text-[10px] rounded text-gray-500">
                                                         {conv.request?.event_type}
                                                     </span>
@@ -96,12 +105,12 @@ export default function MessagesPage() {
     );
 }
 
-function ChatWindow({ conversation, currentUserId, onBack }: { conversation: ChatConversation, currentUserId: string | null, onBack: () => void }) {
-    const { messages, loading, sendMessage } = useMessages(conversation.id);
+function ChatWindow({ conversation, currentUserId, onBack }: { conversation: Conversation, currentUserId: string | null, onBack: () => void }) {
+    const { messages, sendMessage } = useMessages(conversation.id);
     const [newMessage, setNewMessage] = useState('');
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    const otherUser = currentUserId === conversation.vendor_id ? conversation.customer : conversation.vendor;
+    const otherUser = conversation.other_party;
 
     useEffect(() => {
         if (scrollRef.current) {
@@ -150,8 +159,8 @@ function ChatWindow({ conversation, currentUserId, onBack }: { conversation: Cha
                     return (
                         <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[70%] rounded-2xl px-4 py-3 shadow-sm ${isMe
-                                    ? 'bg-[var(--primary)] text-white rounded-br-none'
-                                    : 'bg-white text-gray-800 rounded-bl-none border border-gray-100'
+                                ? 'bg-[var(--primary)] text-white rounded-br-none'
+                                : 'bg-white text-gray-800 rounded-bl-none border border-gray-100'
                                 }`}>
                                 <p className="whitespace-pre-wrap">{msg.content}</p>
                                 <div className={`text-[10px] mt-1 text-right ${isMe ? 'text-white/70' : 'text-gray-400'}`}>

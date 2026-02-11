@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/modules/shared/config/supabase";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
+import { User } from "@supabase/supabase-js";
 import DashboardSidebar from "@/modules/shared/ui/DashboardSidebar";
 
 export default function DashboardLayout({
@@ -12,10 +13,9 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     const router = useRouter();
-    const pathname = usePathname();
     const { direction } = useLanguage();
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [userRole, setUserRole] = useState<'customer' | 'vendor' | 'admin'>('customer');
     const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -63,11 +63,13 @@ export default function DashboardLayout({
                 className={`fixed inset-y-0 ${direction === 'rtl' ? 'right-0' : 'left-0'} z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 lg:transform-none lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : (direction === 'rtl' ? "translate-x-full" : "-translate-x-full")
                     } lg:static lg:block`}
             >
-                <DashboardSidebar
-                    role={userRole}
-                    user={user}
-                    onSignOut={handleSignOut}
-                />
+                {user && (
+                    <DashboardSidebar
+                        role={userRole}
+                        user={user}
+                        onSignOut={handleSignOut}
+                    />
+                )}
             </aside>
 
             {/* Main Content */}

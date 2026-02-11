@@ -10,7 +10,7 @@ export default function MarketPage() {
     const [showFilters, setShowFilters] = useState(false);
 
 
-    const handleFilterChange = (key: keyof MarketFilters, value: any) => {
+    const handleFilterChange = (key: keyof MarketFilters, value: string | number | undefined) => {
         setFilters(prev => ({ ...prev, [key]: value || undefined }));
     };
 

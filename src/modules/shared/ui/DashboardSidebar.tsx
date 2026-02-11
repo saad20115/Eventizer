@@ -1,18 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import SidebarLink from "./SidebarLink";
 import UserProfile from "./UserProfile";
 
+import { User } from "@supabase/supabase-js";
+
 interface DashboardSidebarProps {
     role: 'customer' | 'vendor' | 'admin';
-    user: any;
+    user: User;
     onSignOut: () => void;
 }
 
-export default function DashboardSidebar({ role, user, onSignOut }: DashboardSidebarProps) {
+export default function DashboardSidebar({ role, user, onSignOut: _onSignOut }: DashboardSidebarProps) {
     const { t, direction } = useLanguage();
 
     // Theme Configuration

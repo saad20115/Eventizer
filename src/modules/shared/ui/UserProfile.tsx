@@ -4,8 +4,10 @@ import { useLanguage } from "@/context/LanguageContext";
 import { supabase } from "@/modules/shared/config/supabase";
 import { useRouter } from "next/navigation";
 
+import { User } from "@supabase/supabase-js";
+
 interface UserProfileProps {
-    user: any;
+    user: User;
     primaryColor: string;
     lightColor: string;
 }

@@ -65,7 +65,19 @@ export interface Conversation {
     };
     request?: {
         event_type: string;
-    }
+    };
+    vendor?: {
+        full_name: string;
+        avatar_url: string;
+    };
+    customer?: {
+        full_name: string;
+        avatar_url: string;
+    };
+    messages?: {
+        content: string;
+        created_at: string;
+    }[];
 }
 
 export interface Message {
