@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/modules/shared/config/supabase";
 import { useRouter, usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
-import DashboardSidebar from "@/components/DashboardSidebar";
+import DashboardSidebar from "@/modules/shared/ui/DashboardSidebar";
 
 export default function DashboardLayout({
     children,
@@ -60,7 +60,7 @@ export default function DashboardLayout({
         <div className="min-h-screen bg-gray-50 flex" dir={direction}>
             {/* Sidebar */}
             <aside
-                className={`fixed inset-y-0 ${direction === 'rtl' ? 'right-0' : 'left-0'} z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 lg:transform-none ${sidebarOpen ? "translate-x-0" : (direction === 'rtl' ? "translate-x-full" : "-translate-x-full")
+                className={`fixed inset-y-0 ${direction === 'rtl' ? 'right-0' : 'left-0'} z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 lg:transform-none lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : (direction === 'rtl' ? "translate-x-full" : "-translate-x-full")
                     } lg:static lg:block`}
             >
                 <DashboardSidebar
@@ -97,6 +97,29 @@ export default function DashboardLayout({
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
+
+            {/* Dev Mode: Role Switcher */}
+            <div className="fixed bottom-4 left-4 z-50 bg-white p-2 rounded-xl shadow-lg border border-gray-200 flex gap-2">
+                <div className="text-xs font-bold text-gray-500 flex items-center px-1">Dev:</div>
+                <button
+                    onClick={() => setUserRole('customer')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${userRole === 'customer' ? 'bg-[#8B5A3C] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                    Customer
+                </button>
+                <button
+                    onClick={() => setUserRole('vendor')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${userRole === 'vendor' ? 'bg-[#C19A6B] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                    Vendor
+                </button>
+                <button
+                    onClick={() => setUserRole('admin')}
+                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-colors ${userRole === 'admin' ? 'bg-[#4A5568] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                    Admin
+                </button>
+            </div>
         </div>
     );
 }

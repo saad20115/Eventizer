@@ -1,7 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/context/LanguageContext";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/modules/shared/config/supabase";
 import { useRouter } from "next/navigation";
 
 interface UserProfileProps {

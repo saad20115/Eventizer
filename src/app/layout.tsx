@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Tajawal } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/context/LanguageContext";
-import { DirectionUpdater } from "@/components/DirectionUpdater";
+import { DirectionUpdater } from "@/modules/shared/ui/DirectionUpdater";
 
 const tajawal = Tajawal({
   subsets: ["arabic", "latin"],

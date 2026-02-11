@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
-import SidebarLink from "./dashboard/SidebarLink";
-import UserProfile from "./dashboard/UserProfile";
+import SidebarLink from "./SidebarLink";
+import UserProfile from "./UserProfile";
 
 interface DashboardSidebarProps {
     role: 'customer' | 'vendor' | 'admin';
@@ -46,17 +46,17 @@ export default function DashboardSidebar({ role, user, onSignOut }: DashboardSid
                 { label: t.dashboard.home, href: '/dashboard/customer', icon: '🏠' },
                 { label: t.dashboard.newRequestNav, href: '/dashboard/customer/new-request', icon: '➕' },
                 { label: t.dashboard.myRequests, href: '/dashboard/customer/requests', icon: '📋' },
-                { label: t.dashboard.receivedOffers, href: '/dashboard/customer/offers', icon: '🏷️' },
+                { label: t.dashboard.receivedOffers, href: '/dashboard/customer/offers', icon: '🏷️' }, // Badge removed
                 { label: t.dashboard.bookings, href: '/dashboard/customer/bookings', icon: '📅' },
                 { label: t.dashboard.favorites, href: '/dashboard/customer/favorites', icon: '❤️' },
-                { label: t.dashboard.messages, href: '/dashboard/customer/messages', icon: '💬' },
+                { label: t.dashboard.messages, href: '/dashboard/customer/messages', icon: '💬' }, // Badge removed
                 { label: t.dashboard.settings, href: '/dashboard/settings', icon: '⚙️' },
             ];
         } else if (role === 'vendor') {
             return [
                 { label: t.dashboard.home, href: '/dashboard/vendor', icon: '🏠' },
-                { label: t.dashboard.incomingRequests, href: '/dashboard/vendor/requests', icon: '📨' },
-                { label: t.dashboard.myOffers, href: '/dashboard/vendor/offers', icon: '📊' },
+                { label: t.dashboard.incomingRequests, href: '/dashboard/vendor/requests', icon: '📨' }, // Badge removed
+                { label: t.dashboard.myOffers, href: '/dashboard/vendor/offers', icon: '📊' }, // Badge removed
                 { label: t.dashboard.bookings, href: '/dashboard/vendor/bookings', icon: '📅' },
                 { label: t.dashboard.myServices, href: '/dashboard/vendor/services', icon: '🛍️' },
                 { label: t.dashboard.gallery, href: '/dashboard/vendor/gallery', icon: '📸' },
@@ -70,14 +70,15 @@ export default function DashboardSidebar({ role, user, onSignOut }: DashboardSid
                 { label: t.dashboard.overview, href: '/dashboard/admin', icon: '🏠' },
                 { label: t.dashboard.users, href: '/dashboard/admin/users', icon: '👥' },
                 { label: t.dashboard.vendors, href: '/dashboard/admin/vendors', icon: '🏪' },
-                { label: t.dashboard.requests, href: '/dashboard/admin/requests', icon: '📋' },
+                { label: t.dashboard.requests, href: '/dashboard/admin/requests', icon: '📋' }, // Badge removed
                 { label: t.dashboard.categories, href: '/dashboard/admin/categories', icon: '🏷️' },
                 { label: t.dashboard.financeAdmin, href: '/dashboard/admin/finance', icon: '💰' },
                 { label: t.dashboard.reportsAdmin, href: '/dashboard/admin/reports', icon: '📊' },
                 { label: t.dashboard.security, href: '/dashboard/admin/security', icon: '🛡️' },
-                { label: t.dashboard.notifications, href: '/dashboard/admin/notifications', icon: '🔔' },
+                { label: t.dashboard.notifications, href: '/dashboard/admin/notifications', icon: '🔔' }, // Badge removed
                 { label: t.dashboard.waitlist, href: '/dashboard/admin/waitlist', icon: '📧' },
                 { label: t.dashboard.platformSettings, href: '/dashboard/admin/settings', icon: '⚙️' },
+                { label: 'Market Surveys', href: '/dashboard/admin/surveys', icon: '📝' },
             ];
         }
     };

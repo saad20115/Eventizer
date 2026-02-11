@@ -9,15 +9,22 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@faker-js/faker": "^10.3.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.1.0",
+    "jspdf-autotable": "^5.0.7",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
+    "xlsx": "^0.18.5",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/html2canvas": "^0.5.35",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

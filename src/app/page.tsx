@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from 'next/link';
 import { z } from "zod";
 import { useLanguage } from "@/context/LanguageContext";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "@/modules/shared/config/supabase";
 
 // ===== CUSTOM CURSOR COMPONENT =====
 function CustomCursor() {
@@ -107,6 +107,7 @@ function Header() {
     { label: t.nav.services, href: "#categories" },
     { label: t.nav.howItWorks, href: "#how-it-works" },
     { label: t.nav.about, href: "#about" },
+    { label: t.nav.surveys, href: "/surveys" },
     { label: t.nav.contact, href: "#contact" },
   ];
 
