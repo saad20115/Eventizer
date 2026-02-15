@@ -10,49 +10,105 @@ export interface MarketFilters {
     budgetMax?: number;
 }
 
+const PAGE_SIZE = 12;
+
 export function useMarket() {
     const [requests, setRequests] = useState<Request[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [filters, setFilters] = useState<MarketFilters>({});
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
 
-    const fetchRequests = useCallback(async () => {
-        setLoading(true);
+    const buildQuery = useCallback((pageParam: number) => {
+        let query = supabase
+            .from('requests')
+            .select(`
+                *,
+                profiles:user_id (
+                    full_name,
+                    avatar_url
+                )
+            `)
+            .eq('status', 'open')
+            .order('created_at', { ascending: false });
+
+        if (filters.type) query = query.eq('event_type', filters.type);
+        if (filters.city) query = query.eq('city', filters.city);
+        if (filters.date) query = query.gte('event_date', filters.date);
+        if (filters.budgetMin) query = query.gte('budget_max', filters.budgetMin);
+
+        const from = pageParam * PAGE_SIZE;
+        const to = from + PAGE_SIZE - 1;
+
+        return query.range(from, to);
+    }, [filters]);
+
+    // Reset and fetch initial data when filters change
+    useEffect(() => {
+        const fetchInitial = async () => {
+            setLoading(true);
+            setPage(0);
+            setHasMore(true);
+            try {
+                const query = buildQuery(0);
+                const { data, error } = await query;
+
+                if (error) throw error;
+
+                const newRequests = data as unknown as Request[] || [];
+                setRequests(newRequests);
+                setHasMore(newRequests.length === PAGE_SIZE);
+            } catch (err: any) {
+                console.error('Error fetching market requests:', err);
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchInitial();
+    }, [buildQuery]);
+
+    const loadMore = useCallback(async () => {
+        if (!hasMore || loadingMore) return;
+
+        setLoadingMore(true);
         try {
-            let query = supabase
-                .from('requests')
-                .select(`
-                    *,
-                    profiles:user_id (
-                        full_name,
-                        avatar_url
-                    )
-                `)
-                .eq('status', 'open')
-                .order('created_at', { ascending: false });
-
-            if (filters.type) query = query.eq('event_type', filters.type);
-            if (filters.city) query = query.eq('city', filters.city);
-            if (filters.date) query = query.gte('event_date', filters.date);
-            if (filters.budgetMin) query = query.gte('budget_max', filters.budgetMin);
-
+            const nextPage = page + 1;
+            const query = buildQuery(nextPage);
             const { data, error } = await query;
 
             if (error) throw error;
-            setRequests(data as unknown as Request[] || []);
+
+            const newRequests = data as unknown as Request[] || [];
+            if (newRequests.length > 0) {
+                setRequests(prev => [...prev, ...newRequests]);
+                setPage(nextPage);
+                setHasMore(newRequests.length === PAGE_SIZE);
+            } else {
+                setHasMore(false);
+            }
         } catch (err: any) {
-            console.error('Error fetching market requests:', err);
+            console.error('Error loading more requests:', err);
             setError(err.message);
         } finally {
-            setLoading(false);
+            setLoadingMore(false);
         }
-    }, [filters]);
+    }, [page, hasMore, loadingMore, buildQuery]);
 
-    useEffect(() => {
-        fetchRequests();
-    }, [fetchRequests]);
-
-    return { requests, loading, error, filters, setFilters, refetch: fetchRequests };
+    return {
+        requests,
+        loading,
+        loadingMore,
+        error,
+        filters,
+        setFilters,
+        loadMore,
+        hasMore,
+        refetch: () => setFilters(prev => ({ ...prev })) // Trigger re-fetch by updating filters reference
+    };
 }
 
 export function useMarketRequest(id: string) {

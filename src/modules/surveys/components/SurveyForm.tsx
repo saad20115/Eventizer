@@ -52,16 +52,28 @@ export default function SurveyForm({ survey, userEmail, userId, onComplete }: Su
 
     const visibleQuestions = survey.questions.filter(shouldShowQuestion);
 
-    // Calculate progress (approximate based on answered questions / total visible)
-    const progress = useMemo(() => {
-        if (visibleQuestions.length === 0) return 0;
-        const answeredCount = visibleQuestions.filter(q => answers[q.id]).length;
-        return Math.round((answeredCount / visibleQuestions.length) * 100);
-    }, [answers, visibleQuestions]);
-
     const handleAnswerChange = (questionId: string, value: string) => {
         setAnswers(prev => ({ ...prev, [questionId]: value }));
         // If user switches away from "Other", we might want to clear the custom input, but keeping it is also fine for UX.
+    };
+
+    const handleMultipleChoiceChange = (questionId: string, option: string) => {
+        setAnswers(prev => {
+            const currentVal = prev[questionId] || "";
+            const selectedOptions = currentVal ? currentVal.split(',').map(s => s.trim()) : [];
+
+            let newOptions;
+            if (selectedOptions.includes(option)) {
+                newOptions = selectedOptions.filter(o => o !== option);
+            } else {
+                newOptions = [...selectedOptions, option];
+            }
+
+            return {
+                ...prev,
+                [questionId]: newOptions.join(', ')
+            };
+        });
     };
 
     const handleOtherInputChange = (questionId: string, value: string) => {
@@ -92,15 +104,42 @@ export default function SurveyForm({ survey, userEmail, userId, onComplete }: Su
             return;
         }
 
-        // Only submit answers for visible questions
         const formattedAnswers = visibleQuestions
             .filter(q => answers[q.id]) // ensure we have an answer
             .map(q => {
                 let finalAnswer = answers[q.id];
-                // Combine "Other" with valid text input
-                if ((finalAnswer === 'أخرى' || finalAnswer === 'Other') && otherInputs[q.id]?.trim()) {
-                    finalAnswer = `${finalAnswer}: ${otherInputs[q.id].trim()}`;
+
+                // Keep fallback keywords identical to rendering logic for consistency
+                const forceMulti = q.question_type === 'choice' && (
+                    q.question_text.includes('صعوبة') ||
+                    q.question_text.includes('أسهل') ||
+                    q.question_text.includes('تبحث') ||
+                    q.question_text.includes('تحد') ||
+                    q.question_text.includes('تحدٍ') ||
+                    q.question_text.includes('مشكلة') ||
+                    q.question_text.includes('أكثر من خيار') ||
+                    JSON.stringify(q.options || []).includes('بوفيه')
+                );
+
+                const currentEffectiveType = forceMulti ? 'multiple_choice' : q.question_type;
+
+                if (currentEffectiveType === 'multiple_choice') {
+                    // Logic for multi-select: Handle "Other" for each selected option
+                    const parts = finalAnswer.split(',').map((s: string) => s.trim());
+                    const processedParts = parts.map((p: string) => {
+                        if ((p === 'أخرى' || p === 'Other') && otherInputs[q.id]?.trim()) {
+                            return `${p}: ${otherInputs[q.id].trim()}`;
+                        }
+                        return p;
+                    });
+                    finalAnswer = processedParts.join(', ');
+                } else {
+                    // Combine "Other" for single-select
+                    if ((finalAnswer === 'أخرى' || finalAnswer === 'Other') && otherInputs[q.id]?.trim()) {
+                        finalAnswer = `${finalAnswer}: ${otherInputs[q.id].trim()}`;
+                    }
                 }
+
                 return {
                     questionId: q.id,
                     answer: finalAnswer
@@ -121,12 +160,6 @@ export default function SurveyForm({ survey, userEmail, userId, onComplete }: Su
     if (isCompleted) {
         return (
             <div className="text-center p-12 bg-green-50 rounded-3xl border border-green-100 shadow-xl animate-fadeIn max-w-2xl mx-auto mt-10 relative">
-                {/* Extended: Fixed Back to Home Link for consistency even in success state if needed, 
-                     but typically user wants it on the "page" level. 
-                     Since SurveyForm might be embedded, a fixed link might look odd if the parent has one.
-                     However, the user asked for it "for the page after sending".
-                     If I put it fixed on the screen, it works.
-                 */}
                 <Link
                     href="/"
                     className="fixed top-8 left-8 z-50 inline-flex items-center gap-2 text-[var(--primary)] hover:text-gray-700 transition-colors font-bold text-lg group"
@@ -139,33 +172,48 @@ export default function SurveyForm({ survey, userEmail, userId, onComplete }: Su
                 <h3 className="text-3xl font-bold text-green-800 mb-4">{t.dashboard.surveys.public.thankYou}</h3>
                 <p className="text-xl text-green-700 font-medium mb-8">{t.dashboard.surveys.public.recorded}</p>
 
-                {/* Keep the button as an explicit call to action or remove? 
-                    User said "Add it to this page". The button "Back to Home" is already there. 
-                    I should probably keep the button but maybe style it differently or just rely on the top link?
-                    Usually having a big button is good UX for success pages.
-                    I will keep the button but ENSURE the top-left link is ALSO there as requested.
-                */}
-                <Link
-                    href="/"
-                    className="inline-block px-8 py-3 bg-green-600 text-white rounded-full font-semibold hover:bg-green-700 transition shadow-lg hover:shadow-xl hover:-translate-y-1"
-                >
-                    {t.nav?.home}
-                </Link>
+                <div className="flex justify-center gap-4">
+                    <Link
+                        href="/"
+                        className="inline-block px-8 py-3 bg-gray-200 text-gray-700 rounded-full font-semibold hover:bg-gray-300 transition shadow-sm"
+                    >
+                        {t.nav?.home}
+                    </Link>
+                    <Link
+                        href="/dashboard"
+                        className="inline-block px-8 py-3 bg-[var(--primary)] text-white rounded-full font-semibold hover:bg-[var(--primary)]/90 transition shadow-lg hover:shadow-xl hover:-translate-y-1"
+                    >
+                        الذهاب للوحة التحكم
+                    </Link>
+                </div>
             </div>
         );
     }
 
+    const getSectionHeader = (orderIndex: number) => {
+        const isCustomer = survey.target_audience === 'customer';
+        const sections = t.dashboard.surveys.table.sections;
+        if (!sections) return null;
+
+        if (isCustomer) {
+            if (orderIndex === 1) return sections.generalInfo;
+            if (orderIndex === 7) return sections.aboutOccasion;
+            if (orderIndex === 10) return sections.searchExp;
+            if (orderIndex === 13) return sections.budgetPayment;
+            if (orderIndex === 17) return sections.concept;
+            if (orderIndex === 19) return sections.strategic;
+        } else {
+            if (orderIndex === 1) return sections.businessInfo;
+            if (orderIndex === 4) return sections.servicesExp;
+            if (orderIndex === 6) return sections.digitalPresence;
+            if (orderIndex === 11) return sections.marketExp;
+            if (orderIndex === 14) return sections.conceptComm;
+        }
+        return null;
+    };
+
     return (
         <div dir={direction}>
-            {/* Fixed Back Button - Top Left (or Right based on dir, but user asked for Left) */}
-            {/* strict user request: "top left". But since it's dir={direction}, left might be right in RTL. 
-                 However, "top left" usually implies layout. I will stick to logical logical start/end or explicit left if requested. 
-                 User said "top left" (اعلي الصفحه يسار). I will force left for now or follow direction. 
-                 Actually, usually back buttons are at the "start" of reading.
-                 Let's put it fixed at the top-start relative to direction, or just fixed left if generic.
-                 Given Arabic user, "top left" might mean "top left" literally or "end of header".
-                 Let's assume literal "top left" for now as requested.
-             */}
             <Link
                 href="/"
                 className="fixed top-8 left-8 z-50 inline-flex items-center gap-2 text-[var(--primary)] hover:text-gray-700 transition-colors font-bold text-lg group"
@@ -180,143 +228,231 @@ export default function SurveyForm({ survey, userEmail, userId, onComplete }: Su
                     <p className="text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">{survey.description}</p>
                 </div>
 
-                {visibleQuestions.map((q, idx) => (
-                    <div
-                        key={q.id}
-                        className="group bg-white p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] transition-all duration-300 transform hover:-translate-y-1"
-                        style={{ animationDelay: `${idx * 50}ms` }}
-                    >
-                        <label className="block mb-6">
-                            <div className="flex items-start gap-3">
-                                <span className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center font-bold text-sm">
-                                    {idx + 1}
-                                </span>
-                                <div>
-                                    <span className="text-xl font-bold text-gray-800 block">
-                                        {q.question_text}
-                                        {q.is_required && <span className="text-red-500 ml-1" title="Required">*</span>}
-                                    </span>
-                                    {q.description && (
-                                        <p className="text-sm text-gray-500 mt-2 font-medium bg-gray-50 inline-block px-3 py-1 rounded-lg border border-gray-100">
-                                            💡 {q.description}
-                                        </p>
+                <div className="space-y-6">
+                    {visibleQuestions.map((q, idx) => {
+                        const sectionHeader = getSectionHeader(q.order_index);
+
+                        // Force multiple_choice for specific logical questions based on keywords
+                        // This acts as a fallback if the database type update failed
+                        const forceMulti = q.question_type === 'choice' && (
+                            q.question_text.includes('صعوبة') ||
+                            q.question_text.includes('أسهل') ||
+                            q.question_text.includes('تبحث') ||
+                            q.question_text.includes('تحد') ||
+                            q.question_text.includes('تحدٍ') ||
+                            q.question_text.includes('مشكلة') ||
+                            q.question_text.includes('أكثر من خيار') ||
+                            JSON.stringify(q.options || []).includes('بوفيه')
+                        );
+
+                        const effectiveType = forceMulti ? 'multiple_choice' : q.question_type;
+
+
+                        // HOTFIX: Explicitly override options for the "Challenges" question 
+                        // to ensure "Payment Problems" appears immediately, regardless of DB state.
+                        let displayOptions = q.options;
+                        if (q.question_text.includes('تحد') || q.question_text.includes('Challenge')) {
+                            displayOptions = ["قلة الطلب", "مشاكل الدفع", "التفاوض على الأسعار", "كثرة الاستفسارات غير الجادة", "تنظيم المواعيد", "أخرى"];
+                        }
+
+                        // Debug log to help identify why a question isn't shifting to multi-select
+                        if (q.question_type === 'choice') {
+                            console.log(`Survey Debug: Question "${q.question_text}" - forceMulti: ${forceMulti}`);
+                        }
+
+                        return (
+                            <div key={q.id}>
+                                {sectionHeader && (
+                                    <div className="mt-16 mb-8 first:mt-0">
+                                        <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
+                                            <div className="w-1.5 h-8 bg-gradient-to-b from-[var(--primary)] to-purple-600 rounded-full" />
+                                            {sectionHeader}
+                                        </h3>
+                                        <div className="w-16 h-1 bg-gray-100 rounded-full mt-2 ml-4" />
+                                    </div>
+                                )}
+                                <div
+                                    className="group bg-white p-8 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.05)] hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.1)] transition-all duration-300 transform hover:-translate-y-1"
+                                    style={{ animationDelay: `${idx * 50}ms` }}
+                                >
+                                    <label className="block mb-6">
+                                        <div className="flex items-start gap-3">
+                                            <span className="flex-shrink-0 w-8 h-8 rounded-full bg-[var(--primary)]/10 text-[var(--primary)] flex items-center justify-center font-bold text-sm">
+                                                {idx + 1}
+                                            </span>
+                                            <div>
+                                                <span className="text-xl font-bold text-gray-800 block">
+                                                    {q.question_text}
+                                                    {q.is_required && <span className="text-red-500 ml-1" title="Required">*</span>}
+                                                </span>
+                                                {q.description && (
+                                                    <p className="text-sm text-gray-500 mt-2 font-medium bg-gray-50 inline-block px-3 py-1 rounded-lg border border-gray-100">
+                                                        💡 {q.description}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </label>
+
+                                    {effectiveType === 'text' && (
+                                        (() => {
+                                            // Heuristic to determine input type
+                                            let inputType = 'text';
+                                            if (q.question_text.includes('رابط') || q.question_text.includes('Link')) inputType = 'url';
+                                            else if (q.question_text.includes('رقم الجوال') || q.question_text.includes('Mobile')) inputType = 'tel';
+                                            else if (q.question_text.includes('سعر') || q.question_text.includes('ميزانية') || q.question_text.includes('Price') || q.question_text.includes('Budget')) inputType = 'number';
+
+                                            // Use textarea for open-ended questions or if long input expected (and not a specific type like url/tel/number)
+                                            // If it's explicitly numbers/links, use input. If general text, use textarea.
+                                            const isSpecificType = inputType !== 'text';
+
+                                            if (!isSpecificType) {
+                                                return (
+                                                    <textarea
+                                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent min-h-[100px]"
+                                                        placeholder="Your answer..."
+                                                        value={answers[q.id] || ''}
+                                                        onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                                                    />
+                                                );
+                                            }
+
+                                            return (
+                                                <input
+                                                    type={inputType}
+                                                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
+                                                    placeholder={inputType === 'url' ? 'https://example.com' : 'Your answer...'}
+                                                    value={answers[q.id] || ''}
+                                                    onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                                                    dir="ltr" // Force LTR for URLs and Numbers usually
+                                                />
+                                            );
+                                        })()
+                                    )}
+
+                                    {effectiveType === 'rating' && (
+                                        <div className="flex gap-3 items-center flex-wrap">
+                                            {[1, 2, 3, 4, 5].map((rating) => (
+                                                <button
+                                                    key={rating}
+                                                    type="button"
+                                                    onClick={() => handleAnswerChange(q.id, rating.toString())}
+                                                    className={`w-14 h-14 rounded-2xl font-bold text-lg transition-all transform active:scale-95 ${answers[q.id] === rating.toString()
+                                                        ? 'bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/30 scale-110 ring-4 ring-[var(--primary)]/20'
+                                                        : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-105 border border-gray-200'
+                                                        }`}
+                                                >
+                                                    {rating}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {effectiveType === 'choice' && displayOptions && (
+                                        <div className="space-y-2">
+                                            {displayOptions.map((option: string) => {
+                                                const isSelected = answers[q.id] === option;
+                                                return (
+                                                    <div key={option}>
+                                                        <label className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${isSelected
+                                                            ? 'border-[var(--primary)] bg-[var(--primary)]/5 text-[var(--primary)] shadow-sm'
+                                                            : 'border-gray-100 hover:bg-gray-50 text-gray-700'
+                                                            }`}>
+                                                            <input
+                                                                type="radio"
+                                                                name={q.id}
+                                                                value={option}
+                                                                checked={isSelected}
+                                                                onChange={(e) => handleAnswerChange(q.id, e.target.value)}
+                                                                className="w-5 h-5 text-[var(--primary)] focus:ring-[var(--primary)]"
+                                                            />
+                                                            <span className="font-medium text-lg">{option}</span>
+                                                        </label>
+
+                                                        {/* Render text input if this option is "Other" and it is selected */}
+                                                        {(option === 'أخرى' || option === 'Other') && isSelected && (
+                                                            <input
+                                                                type="text"
+                                                                className="mt-2 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] text-sm animate-fadeIn"
+                                                                placeholder={t.common?.other || "Please specify..."}
+                                                                value={otherInputs[q.id] || ''}
+                                                                onChange={(e) => handleOtherInputChange(q.id, e.target.value)}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {effectiveType === 'multiple_choice' && displayOptions && (
+                                        <div className="space-y-2">
+                                            {displayOptions.map((option: string) => {
+                                                const isSelected = (answers[q.id] || "").split(',').map(s => s.trim()).includes(option);
+                                                return (
+                                                    <div key={option}>
+                                                        <label className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${isSelected
+                                                            ? 'border-[var(--primary)] bg-[var(--primary)]/5 text-[var(--primary)] shadow-sm'
+                                                            : 'border-gray-100 hover:bg-gray-50 text-gray-700'
+                                                            }`}>
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isSelected}
+                                                                onChange={() => handleMultipleChoiceChange(q.id, option)}
+                                                                className="w-5 h-5 rounded text-[var(--primary)] focus:ring-[var(--primary)]"
+                                                            />
+                                                            <span className="font-medium text-lg">{option}</span>
+                                                        </label>
+
+                                                        {/* Render text input if this option is "Other" and it is selected */}
+                                                        {(option === 'أخرى' || option === 'Other') && isSelected && (
+                                                            <input
+                                                                type="text"
+                                                                className="mt-2 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] text-sm animate-fadeIn"
+                                                                placeholder={t.common?.other || "Please specify..."}
+                                                                value={otherInputs[q.id] || ''}
+                                                                onChange={(e) => handleOtherInputChange(q.id, e.target.value)}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
+                                    {q.question_type === 'boolean' && (
+                                        <div className="space-y-2">
+                                            {['true', 'false'].map((val) => {
+                                                const isTrue = val === 'true';
+                                                const isSelected = answers[q.id] === val;
+                                                const label = isTrue ? (t.common?.yes || "نعم") : (t.common?.no || "لا");
+                                                return (
+                                                    <label
+                                                        key={val}
+                                                        className={`flex items-center gap-3 p-3 rounded-lg border transition-all cursor-pointer ${isSelected
+                                                            ? 'border-[var(--primary)] bg-[var(--primary)]/5 text-[var(--primary)] shadow-sm'
+                                                            : 'border-gray-100 hover:bg-gray-50 text-gray-700'
+                                                            }`}
+                                                    >
+                                                        <input
+                                                            type="radio"
+                                                            name={q.id}
+                                                            value={val}
+                                                            checked={isSelected}
+                                                            onChange={() => handleAnswerChange(q.id, val)}
+                                                            className="w-5 h-5 text-[var(--primary)] border-gray-300 focus:ring-[var(--primary)]"
+                                                        />
+                                                        <span className="font-medium text-lg">{label}</span>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
                                     )}
                                 </div>
                             </div>
-                        </label>
-
-                        {q.question_type === 'text' && (
-                            (() => {
-                                // Heuristic to determine input type
-                                let inputType = 'text';
-                                if (q.question_text.includes('رابط') || q.question_text.includes('Link')) inputType = 'url';
-                                else if (q.question_text.includes('رقم الجوال') || q.question_text.includes('Mobile')) inputType = 'tel';
-                                else if (q.question_text.includes('سعر') || q.question_text.includes('ميزانية') || q.question_text.includes('Price') || q.question_text.includes('Budget')) inputType = 'number';
-
-                                // Use textarea for open-ended questions or if long input expected (and not a specific type like url/tel/number)
-                                // If it's explicitly numbers/links, use input. If general text, use textarea.
-                                const isSpecificType = inputType !== 'text';
-
-                                if (!isSpecificType) {
-                                    return (
-                                        <textarea
-                                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent min-h-[100px]"
-                                            placeholder="Your answer..."
-                                            value={answers[q.id] || ''}
-                                            onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                                        />
-                                    );
-                                }
-
-                                return (
-                                    <input
-                                        type={inputType}
-                                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] focus:border-transparent"
-                                        placeholder={inputType === 'url' ? 'https://example.com' : 'Your answer...'}
-                                        value={answers[q.id] || ''}
-                                        onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                                        dir="ltr" // Force LTR for URLs and Numbers usually
-                                    />
-                                );
-                            })()
-                        )}
-
-                        {q.question_type === 'rating' && (
-                            <div className="flex gap-3 items-center flex-wrap">
-                                {[1, 2, 3, 4, 5].map((rating) => (
-                                    <button
-                                        key={rating}
-                                        type="button"
-                                        onClick={() => handleAnswerChange(q.id, rating.toString())}
-                                        className={`w-14 h-14 rounded-2xl font-bold text-lg transition-all transform active:scale-95 ${answers[q.id] === rating.toString()
-                                            ? 'bg-[var(--primary)] text-white shadow-lg shadow-[var(--primary)]/30 scale-110 ring-4 ring-[var(--primary)]/20'
-                                            : 'bg-gray-50 text-gray-500 hover:bg-gray-100 hover:scale-105 border border-gray-200'
-                                            }`}
-                                    >
-                                        {rating}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
-                        {q.question_type === 'choice' && q.options && (
-                            <div className="space-y-2">
-                                {q.options.map((option: any) => ( // option is string
-                                    <div key={option}>
-                                        <label className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:bg-gray-50 cursor-pointer">
-                                            <input
-                                                type="radio"
-                                                name={q.id}
-                                                value={option}
-                                                checked={answers[q.id] === option}
-                                                onChange={(e) => handleAnswerChange(q.id, e.target.value)}
-                                                className="w-5 h-5 text-[var(--primary)] focus:ring-[var(--primary)]"
-                                            />
-                                            <span className="text-gray-700">{option}</span>
-                                        </label>
-
-                                        {/* Render text input if this option is "Other" and it is selected */}
-                                        {(option === 'أخرى' || option === 'Other') && answers[q.id] === option && (
-                                            <input
-                                                type="text"
-                                                className="mt-2 w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--primary)] text-sm animate-fadeIn"
-                                                placeholder={t.common?.other || "Please specify..."} // Need to add 'other' to translations
-                                                value={otherInputs[q.id] || ''}
-                                                onChange={(e) => handleOtherInputChange(q.id, e.target.value)}
-                                            />
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {q.question_type === 'boolean' && (
-                            <div className="flex gap-4">
-                                {['true', 'false'].map((val) => {
-                                    const isTrue = val === 'true';
-                                    const isSelected = answers[q.id] === val;
-                                    return (
-                                        <label key={val} className={`flex-1 flex items-center justify-center gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all ${isSelected
-                                            ? (isTrue ? 'border-green-500 bg-green-50 text-green-700' : 'border-red-500 bg-red-50 text-red-700')
-                                            : 'border-gray-100 bg-gray-50 hover:bg-white hover:border-gray-300 text-gray-600'
-                                            }`}>
-                                            <input
-                                                type="radio"
-                                                name={q.id}
-                                                value={val}
-                                                checked={isSelected}
-                                                onChange={() => handleAnswerChange(q.id, val)}
-                                                className="hidden"
-                                            />
-                                            <span className="text-2xl">{isTrue ? '👍' : '👎'}</span>
-                                            <span className="font-bold">{isTrue ? (t.common?.yes || "Yes") : (t.common?.no || "No")}</span>
-                                        </label>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
-                ))}
+                        );
+                    })}
+                </div>
 
                 {error && (
                     <div className="bg-red-50 border border-red-100 text-red-600 p-6 rounded-2xl text-center shadow-sm animate-shake">

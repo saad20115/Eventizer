@@ -1,28 +1,9 @@
-"use client";
 
-import { useEffect, useState } from 'react';
-import { FullSurvey } from '@/modules/surveys/types';
-import { surveyService } from '@/modules/surveys/services/surveyService';
+import { serverSurveyService } from '@/modules/surveys/services/serverSurveyService';
 import SurveyForm from '@/modules/surveys/components/SurveyForm';
-import { useLanguage } from '@/context/LanguageContext';
 
-export default function VendorSurveyPage() {
-    const { t } = useLanguage();
-    const [survey, setSurvey] = useState<FullSurvey | null>(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const fetchSurvey = async () => {
-            const data = await surveyService.getSurveyByAudience('vendor');
-            setSurvey(data);
-            setLoading(false);
-        };
-        fetchSurvey();
-    }, []);
-
-    if (loading) {
-        return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-    }
+export default async function VendorSurveyPage() {
+    const survey = await serverSurveyService.getSurveyByAudience('vendor');
 
     if (!survey) {
         return (

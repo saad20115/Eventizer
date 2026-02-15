@@ -1,5 +1,5 @@
 export type SurveyTargetAudience = 'customer' | 'vendor' | 'all';
-export type SurveyQuestionType = 'text' | 'rating' | 'choice' | 'boolean';
+export type SurveyQuestionType = 'text' | 'rating' | 'choice' | 'boolean' | 'multiple_choice';
 
 export interface Survey {
     id: string;

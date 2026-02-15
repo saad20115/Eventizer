@@ -2,7 +2,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
     let response = NextResponse.next({
         request: {
             headers: request.headers,
@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
     } = await supabase.auth.getSession()
 
     // Protected routes
-    if (request.nextUrl.pathname.startsWith('/dashboard')) {
+    if (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/admin')) {
         if (!session) {
             return NextResponse.redirect(new URL('/auth/login', request.url))
         }
@@ -53,5 +53,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/dashboard/:path*', '/auth/:path*'],
+    matcher: ['/dashboard/:path*', '/auth/:path*', '/admin/:path*'],
 }

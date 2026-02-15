@@ -1,35 +1,5 @@
 
-import { createClient } from '@supabase/supabase-js';
-import fs from 'fs';
-import path from 'path';
-
-// Read .env.local manually
-const envPath = path.resolve(process.cwd(), '.env.local');
-const envFile = fs.readFileSync(envPath, 'utf8');
-const envVars = envFile.split('\n').reduce((acc, line) => {
-    const [key, value] = line.split('=');
-    if (key && value) acc[key.trim()] = value.trim();
-    return acc;
-}, {});
-
-const supabaseUrl = envVars['NEXT_PUBLIC_SUPABASE_URL'];
-const supabaseKey = envVars['NEXT_PUBLIC_SUPABASE_ANON_KEY'];
-
-if (!supabaseUrl || !supabaseKey) {
-    console.error('Missing Supabase credentials in .env.local');
-    process.exit(1);
-}
-
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-const vendorSurvey = {
-    title: 'استبيان مقدمي الخدمات - Vendor Survey',
-    description: 'تُستخدم المعلومات لأغراض التقييم الأولي وبناء قاعدة الشركاء المؤسسين.',
-    target_audience: 'vendor',
-    is_active: true
-};
-
-const questions = [
+export const VENDOR_SURVEY_QUESTIONS = [
     // === Basic Info ===
     { text: 'اسم النشاط / الجهة', type: 'text', idx: 1, required: true },
     { text: 'رقم الجوال', type: 'text', idx: 2, required: true },
@@ -50,7 +20,7 @@ const questions = [
     // === Section 1: Current Status ===
     { text: 'كيف تحصل على عملائك حاليًا؟', type: 'choice', options: ["إنستجرام", "تيك توك", "سناب شات", "واتساب", "توصيات"], idx: 12, required: true },
     { text: 'هل الطلب على خدمتك مستقر حاليًا؟', type: 'choice', options: ["نعم", "أحيانًا", "لا"], idx: 13, required: true },
-    { text: 'ما أكثر تحدٍ تواجهه في عملك؟', type: 'multiple_choice', options: ["قلة الطلب", "مشاكل الدفع", "التفاوض على الأسعار", "كثرة الاستفسارات غير الجادة", "تنظيم المواعيد", "أخرى"], idx: 14, required: true },
+    { text: 'ما أكثر تحدٍ تواجهه في عملك؟', type: 'choice', options: ["قلة الطلب", "مشاكل الدفع", "التفاوض على الأسعار", "كثرة الاستفسارات غير الجادة", "تنظيم المواعيد", "أخرى"], idx: 14, required: true },
 
     // === CONDITIONAL SECTIONS ===
     // Photography
@@ -96,58 +66,3 @@ const questions = [
     // === Section 5 ===
     { text: 'ما الذي قد يجعلك تتردد أو ترفض العمل مع منصة مثل Eventizer؟', type: 'text', idx: 41, required: true }
 ];
-
-async function seed() {
-    console.log('Seeding Vendor Survey...');
-
-    // 1. Delete existing (Optional, be careful in prod)
-    const { data: existing, error: fetchError } = await supabase
-        .from('surveys')
-        .select('id')
-        .eq('title', vendorSurvey.title);
-
-    if (fetchError) console.error('Error fetching existing:', fetchError);
-
-    if (existing && existing.length > 0) {
-        console.log(`Found ${existing.length} existing surveys. Deleting...`);
-        for (const s of existing) {
-            await supabase.from('surveys').delete().eq('id', s.id);
-        }
-    }
-
-    // 2. Insert Survey
-    const { data: survey, error: insertError } = await supabase
-        .from('surveys')
-        .insert(vendorSurvey)
-        .select()
-        .single();
-
-    if (insertError) {
-        console.error('Error inserting survey:', insertError);
-        return;
-    }
-
-    console.log('Survey created:', survey.id);
-
-    // 3. Insert Questions
-    const formattedQuestions = questions.map(q => ({
-        survey_id: survey.id,
-        question_text: q.text,
-        question_type: q.type,
-        options: q.options ? JSON.stringify(q.options) : null,
-        order_index: q.idx,
-        is_required: q.required
-    }));
-
-    const { error: matchError } = await supabase
-        .from('survey_questions')
-        .insert(formattedQuestions);
-
-    if (matchError) {
-        console.error('Error inserting questions:', matchError);
-    } else {
-        console.log(`Successfully inserted ${formattedQuestions.length} questions.`);
-    }
-}
-
-seed();

@@ -40,9 +40,9 @@ export function useProfile() {
             }
 
             setProfile({ ...data, email: user.email });
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error fetching profile:', err);
-            setError(err.message);
+            setError(err instanceof Error ? err.message : 'An unknown error occurred');
         } finally {
             setLoading(false);
         }
@@ -63,9 +63,9 @@ export function useProfile() {
 
             await fetchProfile(); // Refresh data
             return { success: true };
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error('Error updating profile:', err);
-            return { success: false, error: err.message };
+            return { success: false, error: err instanceof Error ? err.message : 'An unknown error occurred' };
         }
     };
 

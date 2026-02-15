@@ -1,41 +1,50 @@
 "use client";
-import { useState, useEffect } from "react";
+import Image from "next/image";
 
-// ===== LUXURY ANIMATED LOGO =====
+// ===== LUXURY LOGO WITH ANIMATED SHIMMER =====
 export default function LuxuryLogo() {
-    const [theme, setTheme] = useState<'gold' | 'silver'>('gold');
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setTheme(prev => prev === 'gold' ? 'silver' : 'gold');
-        }, 7000); // Slower alternation (7s)
-        return () => clearInterval(interval);
-    }, []);
-
     return (
-        <div className="relative">
-            <span
-                className="text-3xl font-serif tracking-wider font-bold transition-all duration-[2000ms]"
-                style={{
-                    backgroundImage: theme === 'gold'
-                        // Black Base with Gold Shine
-                        ? 'linear-gradient(135deg, #000000 40%, #D4AF37 50%, #000000 60%)'
-                        // Black Base with White Shine
-                        : 'linear-gradient(135deg, #000000 40%, #FFFFFF 50%, #000000 60%)',
-                    backgroundSize: '200% auto',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    animation: 'shimmer 4s infinite linear',
-                    filter: 'drop-shadow(0 2px 4px rgba(255,255,255,0.8))'
-                }}
-            >
-                𝔈ventizer
-            </span>
-            {/* Decorative Underline matching shine */}
+        <div className="relative group overflow-hidden">
+            <div className="relative flex items-center justify-center">
+                {/* Main Logo Image - Increased Width */}
+                <Image
+                    src="/logo.png"
+                    alt="Eventizer Logo"
+                    width={280} // Increased from 200
+                    height={84} // Proportional increase
+                    className="h-16 w-auto transition-all duration-700 group-hover:scale-105 drop-shadow-[0_0_10px_rgba(212,175,55,0.2)] group-hover:drop-shadow-[0_0_20px_rgba(212,175,55,0.6)]"
+                />
+
+                {/* Shimmer Effect Layer - Continuous Animation */}
+                <div className="absolute inset-0 pointer-events-none overflow-hidden">
+                    {/* White Crystal Shimmer */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent -translate-x-[150%] animate-luxuryShimmerActive" />
+
+                    {/* Golden Gloss Shimmer */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#FFD700]/40 via-[#D4AF37]/30 to-transparent -translate-x-[150%] animate-luxuryShimmerActive animation-delay-2000" />
+                </div>
+            </div>
+
+            {/* Decorative Luxury Underline */}
             <div
-                className={`absolute -bottom-1 left-0 h-0.5 transition-all duration-[2000ms] ${theme === 'gold' ? 'w-full bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent' : 'w-full bg-gradient-to-r from-transparent via-[#FFFFFF] to-transparent'
-                    }`}
+                className="absolute -bottom-1 left-0 h-[3px] transition-all duration-[1000ms] w-0 group-hover:w-full bg-gradient-to-r from-transparent via-[#D4AF37] via-[#FFD700] to-transparent shadow-[0_0_12px_#D4AF37]"
             />
+
+            <style jsx>{`
+                @keyframes luxuryShimmerActive {
+                    0% { transform: translateX(-150%) skewX(-20deg); opacity: 0; }
+                    15% { opacity: 1; }
+                    35% { transform: translateX(250%) skewX(-20deg); opacity: 1; }
+                    50% { opacity: 0; }
+                    100% { transform: translateX(250%) skewX(-20deg); opacity: 0; }
+                }
+                .animate-luxuryShimmerActive {
+                    animation: luxuryShimmerActive 6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+                }
+                .animation-delay-2000 {
+                    animation-delay: 2s;
+                }
+            `}</style>
         </div>
     );
 }

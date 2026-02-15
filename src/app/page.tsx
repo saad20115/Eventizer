@@ -1,11 +1,12 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import Link from 'next/link';
+
 import { z } from "zod";
 import { useLanguage } from "@/context/LanguageContext";
 import { supabase } from "@/modules/shared/config/supabase";
 import Header from "@/components/layout/Header";
 import LuxuryLogo from "@/components/ui/LuxuryLogo";
+import ServicesMarquee from "@/components/sections/ServicesMarquee";
 
 // ===== CUSTOM CURSOR COMPONENT =====
 function CustomCursor() {
@@ -238,49 +239,88 @@ function HeroSection() {
   );
 }
 
-// ===== ABOUT US =====
+// ===== ABOUT US WITH ANIMATED CAROUSEL =====
 function AboutSection() {
   const { t } = useLanguage();
+  const [currentImage, setCurrentImage] = useState(0);
+  const images = [
+    "https://images.unsplash.com/photo-1519741497674-611481863552?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1555244162-803834f70033?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1504437484202-61e00caee564?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1517457373958-b7bdd458ad20?w=800&h=600&fit=crop",
+    "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?w=800&h=600&fit=crop"
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % images.length);
+    }, 4000); // Change image every 4 seconds
+    return () => clearInterval(timer);
+  }, [images.length]);
+
   return (
     <section id="about" className="py-24 bg-[var(--cream)] relative overflow-hidden">
       <div className="container mx-auto px-4">
         <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div className="relative animate-fadeInUp">
+          <div className="relative h-[500px] animate-fadeInUp">
             <div className="absolute -top-4 -left-4 w-72 h-72 bg-[var(--gold)]/10 rounded-full blur-3xl" />
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl">
-              <img
-                src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800&h=600&fit=crop"
-                alt="Eventizer Team"
-                className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
-              />
+            <div className="relative h-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white">
+              {images.map((img, idx) => (
+                <img
+                  key={idx}
+                  src={img}
+                  alt={`Service ${idx + 1}`}
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out ${idx === currentImage ? 'opacity-100' : 'opacity-0'}`}
+                />
+              ))}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              <div className="absolute bottom-6 right-6 text-white">
+
+              {/* Overlay Stat */}
+              <div className="absolute bottom-6 right-6 text-white z-10 text-right">
                 <div className="text-4xl font-bold mb-1">+10</div>
-                <div className="text-sm opacity-90">{t.about.description2.split(" ").slice(-3).join(" ")}</div> {/* Dynamic logic for "Years of Experience" is tricky, simplifying to static or just hiding text to focus on translation */}
+                <div className="text-sm opacity-90">سنوات من الخبرة والتميز</div>
+              </div>
+
+              {/* Progress Indicators */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                {images.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentImage ? 'w-8 bg-white' : 'w-2 bg-white/50'}`}
+                  />
+                ))}
               </div>
             </div>
           </div>
 
           <div className="animate-fadeInUp" style={{ animationDelay: '0.2s' }}>
             <span className="text-[var(--gold)] font-medium mb-2 block">{t.about.badge}</span>
-            <h2 className="text-4xl md:text-5xl font-serif mb-6">
+            <h2 className="text-4xl md:text-5xl font-serif mb-6 leading-tight">
               {t.about.title}
             </h2>
-            <p className="text-[var(--muted)] text-lg leading-relaxed mb-6">
-              {t.about.description1}
-            </p>
-            <p className="text-[var(--muted)] text-lg leading-relaxed mb-8">
-              {t.about.description2}
-            </p>
+            <div className="space-y-6">
+              <p className="text-[var(--muted)] text-xl leading-relaxed">
+                {t.about.description1}
+              </p>
+              <p className="text-[var(--muted)] text-xl leading-relaxed">
+                {t.about.description2}
+              </p>
+            </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-8 mt-10 p-6 bg-white/50 rounded-2xl backdrop-blur-sm border border-white">
               {[
-                { title: t.about.visionTitle, desc: t.about.visionDesc },
-                { title: t.about.missionTitle, desc: t.about.missionDesc }
+                { title: t.about.visionTitle, desc: t.about.visionDesc, icon: "🎯" },
+                { title: t.about.missionTitle, desc: t.about.missionDesc, icon: "🤝" }
               ].map((item, i) => (
-                <div key={i} className="border-r-4 border-[var(--gold)] pr-4">
-                  <h4 className="font-bold text-xl mb-1">{item.title}</h4>
-                  <p className="text-sm text-[var(--muted)]">{item.desc}</p>
+                <div key={i} className="flex flex-col gap-2">
+                  <span className="text-2xl">{item.icon}</span>
+                  <h4 className="font-bold text-xl text-[var(--charcoal)]">{item.title}</h4>
+                  <p className="text-[var(--muted)]">{item.desc}</p>
                 </div>
               ))}
             </div>
@@ -371,59 +411,7 @@ function HowItWorksSection() {
   );
 }
 
-// ===== CATEGORIES =====
-function CategoriesSection() {
-  const { t } = useLanguage();
-  const categories = [
-    { name: t.categories.items.photography, image: "https://images.unsplash.com/photo-1537633552985-df8429e8048b?w=600&h=600&fit=crop" },
-    { name: t.categories.items.catering, image: "https://images.unsplash.com/photo-1555244162-803834f70033?w=600&h=600&fit=crop" },
-    { name: t.categories.items.venues, image: "https://images.unsplash.com/photo-1519167758481-83f550bb49b3?w=600&h=600&fit=crop" },
-    { name: t.categories.items.flowers, image: "/images/fnp-bouquet-50.jpg" },
-    { name: t.categories.items.music, image: "https://images.unsplash.com/photo-1429962714451-bb934ecdc4ec?w=600&h=600&fit=crop" },
-    { name: t.categories.items.sweets, image: "https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=600&h=600&fit=crop" },
-    { name: t.categories.items.kosha, image: "/images/kosha-hia-2020.jpg" },
-    { name: t.categories.items.gifts, image: "https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=600&h=600&fit=crop" },
-  ];
 
-  return (
-    <section id="categories" className="py-24 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <span className="text-[var(--primary)] font-medium mb-2 block">{t.categories.badge}</span>
-          <h2 className="text-4xl md:text-5xl font-serif mb-4">
-            {t.categories.title.split(" ")[0]} <span className="bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] bg-clip-text text-transparent">{t.categories.title.split(" ").slice(1).join(" ")}</span>
-          </h2>
-          <div className="w-20 h-1 bg-gradient-to-r from-[var(--primary)] to-[var(--secondary)] mx-auto rounded-full" />
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {categories.map((cat, i) => (
-            <div
-              key={i}
-              className="group cursor-pointer animate-fadeInUp"
-              style={{ animationDelay: `${0.1 * i}s` }}
-            >
-              <div className="relative h-64 rounded-3xl overflow-hidden shadow-lg group-hover:shadow-xl transition-all duration-500 group-hover:-translate-y-2">
-                <img src={cat.image} alt={cat.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-all duration-500" />
-                <div className="absolute inset-0 flex flex-col items-center justify-end pb-6 text-white">
-                  <span className="font-bold text-xl">{cat.name}</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="text-center mt-12">
-          <a href="#waitlist" className="inline-flex items-center gap-2 bg-[var(--secondary)] text-white px-8 py-4 rounded-full font-semibold transition-all duration-300 hover:shadow-lg hover:scale-105">
-            <span>{t.categories.ctaMore}</span>
-            <span className="group-hover:translate-x-1 transition-transform">←</span>
-          </a>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 // ===== WAITLIST =====
 const waitlistSchema = z.object({
@@ -722,7 +710,7 @@ export default function Home() {
         <AboutSection />
         <FeaturesSection />
         <HowItWorksSection />
-        <CategoriesSection />
+        <ServicesMarquee />
         <WaitlistSection />
       </main>
       <Footer />

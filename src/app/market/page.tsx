@@ -6,7 +6,7 @@ import RequestCard from "@/components/market/RequestCard";
 import { useMarket, MarketFilters } from "@/hooks/useMarket";
 
 export default function MarketPage() {
-    const { requests, loading, error, filters, setFilters } = useMarket();
+    const { requests, loading, loadingMore, error, filters, setFilters, loadMore, hasMore } = useMarket();
     const [showFilters, setShowFilters] = useState(false);
 
 
@@ -143,11 +143,31 @@ export default function MarketPage() {
                                 </button>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                                {requests.map((req) => (
-                                    <RequestCard key={req.id} request={req} />
-                                ))}
-                            </div>
+                            <>
+                                <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                                    {requests.map((req) => (
+                                        <RequestCard key={req.id} request={req} />
+                                    ))}
+                                </div>
+                                {hasMore && (
+                                    <div className="mt-8 text-center">
+                                        <button
+                                            onClick={() => loadMore()}
+                                            disabled={loadingMore}
+                                            className="px-8 py-3 bg-white border border-gray-200 hover:bg-gray-50 text-[var(--primary)] text-sm font-bold rounded-xl shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+                                        >
+                                            {loadingMore ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-[var(--primary)] border-t-transparent rounded-full animate-spin"></div>
+                                                    جاري التحميل...
+                                                </>
+                                            ) : (
+                                                'عرض المزيد من الطلبات'
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
 

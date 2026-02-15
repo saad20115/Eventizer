@@ -1,40 +1,29 @@
 import { supabase } from '@/modules/shared/config/supabase';
-import { FullSurvey, SurveyResponse, SurveyAnswer, SurveyQuestion } from '../types';
+import { FullSurvey } from '../types';
 
 export const surveyService = {
     // Fetch active survey for a specific audience (customer/vendor)
     // For MVP, we fetch the first active survey matching the audience.
     async getSurveyByAudience(audience: 'customer' | 'vendor'): Promise<FullSurvey | null> {
-        // 1. Get the survey
-        const { data: survey, error: surveyError } = await supabase
+        // Fetch survey and its questions in a single query using joins
+        const { data, error } = await supabase
             .from('surveys')
-            .select('*')
+            .select(`
+                *,
+                questions:survey_questions(*)
+            `)
             .eq('target_audience', audience)
             .eq('is_active', true)
+            .order('order_index', { foreignTable: 'survey_questions', ascending: true })
             .limit(1)
             .single();
 
-        if (surveyError || !survey) {
-            console.error('Error fetching survey:', surveyError);
+        if (error || !data) {
+            console.error('Error fetching survey with questions:', error);
             return null;
         }
 
-        // 2. Get questions
-        const { data: questions, error: questionsError } = await supabase
-            .from('survey_questions')
-            .select('*')
-            .eq('survey_id', survey.id)
-            .order('order_index', { ascending: true });
-
-        if (questionsError) {
-            console.error('Error fetching questions:', questionsError);
-            return null;
-        }
-
-        return {
-            ...survey,
-            questions: questions || []
-        };
+        return data as FullSurvey;
     },
 
     // Submit a response
@@ -43,7 +32,7 @@ export const surveyService = {
         answers: { questionId: string; answer: string }[],
         respondentId?: string,
         respondentEmail?: string
-    ): Promise<{ success: boolean; error?: any }> {
+    ): Promise<{ success: boolean; error?: Error | unknown }> {
         try {
             // 1. Create Response Entry
             const { data: response, error: responseError } = await supabase
@@ -74,9 +63,40 @@ export const surveyService = {
             if (answersError) throw answersError;
 
             return { success: true };
-        } catch (error) {
+        } catch (error: unknown) {
             console.error('Error submitting survey:', error);
             return { success: false, error };
+            return { success: false, error };
         }
+    },
+
+    // Check if user has already responded to the active survey for an audience
+    async hasUserResponded(userId: string, audience: 'customer' | 'vendor'): Promise<boolean> {
+        // 1. Get Active Survey ID for that audience
+        // We reuse the getSurveyByAudience logic but we could optimize to select ID only if needed.
+        // For now, reuse is fine.
+        const { data: survey, error: surveyError } = await supabase
+            .from('surveys')
+            .select('id')
+            .eq('target_audience', audience)
+            .eq('is_active', true)
+            .limit(1)
+            .single();
+
+        if (surveyError || !survey) return false;
+
+        // 2. Check Response Count
+        const { count, error } = await supabase
+            .from('survey_responses')
+            .select('*', { count: 'exact', head: true })
+            .eq('survey_id', survey.id)
+            .eq('respondent_id', userId);
+
+        if (error) {
+            console.error('Error checking response status:', error);
+            return false;
+        }
+
+        return (count || 0) > 0;
     }
 };

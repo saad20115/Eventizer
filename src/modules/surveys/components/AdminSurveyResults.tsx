@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { supabase } from '@/modules/shared/config/supabase';
-import { FullSurvey, SurveyResponse, SurveyAnswer } from '@/modules/surveys/types';
+import { FullSurvey, SurveyResponse } from '@/modules/surveys/types';
 import { useParams } from 'next/navigation';
 
 import { useLanguage } from '@/context/LanguageContext';
@@ -17,10 +17,11 @@ export default function AdminSurveyResults() {
 
     const [survey, setSurvey] = useState<FullSurvey | null>(null);
     const [responses, setResponses] = useState<SurveyResponse[]>([]);
-    const [answers, setAnswers] = useState<SurveyAnswer[]>([]); // simplified for MVP, ideally SurveyAnswer[]
+    const [answersMap, setAnswersMap] = useState<Map<string, Map<string, string>>>(new Map());
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState<'analysis' | 'responses'>('analysis');
     const containerRef = useRef<HTMLDivElement>(null);
+
 
     // Filter & Sort State
     const [searchTerm, setSearchTerm] = useState('');
@@ -29,31 +30,37 @@ export default function AdminSurveyResults() {
     const [filterValue, setFilterValue] = useState('');
 
     // Derived State: Filtered & Sorted Responses
-    const filteredResponses = responses.filter(r => {
-        // 1. Search (ID or Answers)
-        const matchesSearch = () => {
-            if (!searchTerm) return true;
-            const term = searchTerm.toLowerCase();
-            if (r.id.toLowerCase().includes(term)) return true;
+    const filteredResponses = useMemo(() => {
+        return responses.filter(r => {
+            // 1. Search (ID or Answers)
+            const matchesSearch = () => {
+                if (!searchTerm) return true;
+                const term = searchTerm.toLowerCase();
+                if (r.id.toLowerCase().includes(term)) return true;
 
-            // Check answers
-            const rAnswers = answers.filter(a => a.response_id === r.id);
-            return rAnswers.some(a => (a.answer_text || '').toLowerCase().includes(term));
-        };
+                // Check answers in Map
+                const rAnswers = answersMap.get(r.id);
+                if (!rAnswers) return false;
+                for (const text of rAnswers.values()) {
+                    if (text.toLowerCase().includes(term)) return true;
+                }
+                return false;
+            };
 
-        // 2. Filter by Specific Question
-        const matchesFilter = () => {
-            if (filterQuestionId === 'all' || !filterValue) return true;
-            const answer = answers.find(a => a.response_id === r.id && a.question_id === filterQuestionId);
-            return (answer?.answer_text || '').toLowerCase().includes(filterValue.toLowerCase());
-        };
+            // 2. Filter by Specific Question
+            const matchesFilter = () => {
+                if (filterQuestionId === 'all' || !filterValue) return true;
+                const answerText = answersMap.get(r.id)?.get(filterQuestionId);
+                return (answerText || '').toLowerCase().includes(filterValue.toLowerCase());
+            };
 
-        return matchesSearch() && matchesFilter();
-    }).sort((a, b) => {
-        const dateA = new Date(a.created_at).getTime();
-        const dateB = new Date(b.created_at).getTime();
-        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-    });
+            return matchesSearch() && matchesFilter();
+        }).sort((a, b) => {
+            const dateA = new Date(a.created_at).getTime();
+            const dateB = new Date(b.created_at).getTime();
+            return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+        });
+    }, [responses, answersMap, searchTerm, sortOrder, filterQuestionId, filterValue]);
 
 
     useEffect(() => {
@@ -62,40 +69,48 @@ export default function AdminSurveyResults() {
         const fetchResults = async () => {
             setLoading(true);
             try {
-                // 1. Get Survey & Questions
+                // 1. Get Survey & Questions in ONE query
                 const { data: surveyData } = await supabase
                     .from('surveys')
-                    .select('*')
+                    .select('*, questions:survey_questions(*)')
                     .eq('id', surveyId)
+                    .order('order_index', { foreignTable: 'survey_questions', ascending: true })
                     .single();
 
-                const { data: questions } = await supabase
-                    .from('survey_questions')
-                    .select('*')
-                    .eq('survey_id', surveyId)
-                    .order('order_index');
-
                 if (surveyData) {
-                    setSurvey({ ...surveyData, questions: questions || [] });
+                    setSurvey(surveyData as FullSurvey);
                 }
 
                 // 2. Get Responses
                 const { data: responsesData } = await supabase
                     .from('survey_responses')
                     .select('*')
-                    .eq('survey_id', surveyId);
+                    .eq('survey_id', surveyId)
+                    .order('created_at', { ascending: false });
 
-                if (responsesData) setResponses(responsesData);
+                if (responsesData) {
+                    setResponses(responsesData);
 
-                // 3. Get Answers
-                if (responsesData && responsesData.length > 0) {
-                    const responseIds = responsesData.map(r => r.id);
-                    const { data: answersData } = await supabase
-                        .from('survey_answers')
-                        .select('*')
-                        .in('response_id', responseIds);
+                    // 3. Get Answers for all these responses efficiently
+                    if (responsesData.length > 0) {
+                        const responseIds = responsesData.map(r => r.id);
+                        const { data: answersData } = await supabase
+                            .from('survey_answers')
+                            .select('*')
+                            .in('response_id', responseIds);
 
-                    if (answersData) setAnswers(answersData);
+                        if (answersData) {
+                            // Build nested Map: ResponseId -> QuestionId -> AnswerText
+                            const newMap = new Map<string, Map<string, string>>();
+                            answersData.forEach(a => {
+                                if (!newMap.has(a.response_id)) {
+                                    newMap.set(a.response_id, new Map());
+                                }
+                                newMap.get(a.response_id)!.set(a.question_id, a.answer_text || '');
+                            });
+                            setAnswersMap(newMap);
+                        }
+                    }
                 }
 
             } catch (error) {
@@ -113,11 +128,29 @@ export default function AdminSurveyResults() {
 
     // Helper to count answers for a question
     const getAnswerCounts = (questionId: string) => {
-        const questionAnswers = answers.filter(a => a.question_id === questionId);
         const counts: Record<string, number> = {};
-        questionAnswers.forEach(a => {
-            const val = a.answer_text || 'Skipped';
-            counts[val] = (counts[val] || 0) + 1;
+        const q = survey.questions.find(sq => sq.id === questionId);
+
+        responses.forEach(r => {
+            const answerText = answersMap.get(r.id)?.get(questionId);
+            if (!answerText) {
+                counts['Skipped'] = (counts['Skipped'] || 0) + 1;
+                return;
+            }
+
+            if (q?.question_type === 'multiple_choice') {
+                // Split multi-select answers and count each part
+                const parts = answerText.split(',').map(s => s.trim()).filter(Boolean);
+                parts.forEach(p => {
+                    // Extract name before ":" if it's an "Other" answer
+                    const label = p.includes(':') ? p.split(':')[0].trim() : p;
+                    counts[label] = (counts[label] || 0) + 1;
+                });
+            } else {
+                // Standard single choice: handle "Other: text" as well for clean labels
+                const label = answerText.includes(':') ? answerText.split(':')[0].trim() : answerText;
+                counts[label] = (counts[label] || 0) + 1;
+            }
         });
         return counts;
     };
@@ -129,9 +162,10 @@ export default function AdminSurveyResults() {
                 'Response ID': r.id,
                 'Date': new Date(r.created_at).toLocaleDateString(),
             };
+            const rAnswers = answersMap.get(r.id);
             survey?.questions.forEach((q, i) => {
-                const answer = answers.find(a => a.response_id === r.id && a.question_id === q.id);
-                row[`Q${i + 1}: ${q.question_text}`] = answer ? answer.answer_text : '';
+                const answerText = rAnswers?.get(q.id);
+                row[`Q${i + 1}: ${q.question_text}`] = answerText || '';
             });
             return row;
         });
@@ -400,12 +434,12 @@ export default function AdminSurveyResults() {
 
                                 {q.question_type === 'text' ? (
                                     <div className="space-y-2 max-h-60 overflow-y-auto bg-gray-50 p-4 rounded-lg">
-                                        {answers.filter(a => a.question_id === q.id).map((a, i) => (
+                                        {responses.map((r: SurveyResponse) => answersMap.get(r.id)?.get(q.id)).filter(Boolean).map((text, i) => (
                                             <div key={i} className="text-sm p-3 border-b border-gray-100 last:border-0 bg-white rounded shadow-sm mb-2 text-gray-700">
-                                                &quot;{a.answer_text}&quot;
+                                                &quot;{text}&quot;
                                             </div>
                                         ))}
-                                        {answers.filter(a => a.question_id === q.id).length === 0 && <span className="text-gray-400 text-sm">{t.dashboard.surveys.table.noTextAnswers}</span>}
+                                        {responses.every((r: SurveyResponse) => !answersMap.get(r.id)?.has(q.id)) && <span className="text-gray-400 text-sm">{t.dashboard.surveys.table.noTextAnswers}</span>}
                                     </div>
                                 ) : (
                                     <div className="space-y-4">
@@ -453,6 +487,7 @@ export default function AdminSurveyResults() {
                                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--primary)]"
                                 value={sortOrder}
                                 onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                                title="Sort Order"
                             >
                                 <option value="desc">Newest First</option>
                                 <option value="asc">Oldest First</option>
@@ -463,6 +498,7 @@ export default function AdminSurveyResults() {
                                     className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--primary)] max-w-[150px]"
                                     value={filterQuestionId}
                                     onChange={(e) => setFilterQuestionId(e.target.value)}
+                                    title="Filter by Question"
                                 >
                                     <option value="all">Filter by Question</option>
                                     {survey.questions.map((q, i) => (
@@ -496,15 +532,15 @@ export default function AdminSurveyResults() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {filteredResponses.map((r) => (
+                                {filteredResponses.map((r: SurveyResponse) => (
                                     <tr key={r.id} className="bg-white border-b hover:bg-gray-50">
                                         <td className="px-6 py-4 font-mono text-xs text-gray-500">{r.id.substring(0, 8)}...</td>
                                         <td className="px-6 py-4 text-gray-500">{new Date(r.created_at).toLocaleDateString()}</td>
                                         {survey.questions.map((q) => {
-                                            const answer = answers.find(a => a.response_id === r.id && a.question_id === q.id);
+                                            const answerText = answersMap.get(r.id)?.get(q.id);
                                             return (
                                                 <td key={q.id} className="px-6 py-4 text-gray-900">
-                                                    {answer ? answer.answer_text : <span className="text-gray-300">-</span>}
+                                                    {answerText || <span className="text-gray-300">-</span>}
                                                 </td>
                                             );
                                         })}
