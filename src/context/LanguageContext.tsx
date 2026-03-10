@@ -29,6 +29,7 @@ const translations = {
             surveys: "الاستبيانات",
             contact: "تواصل معنا",
             login: "دخول",
+            vendors: "لمقدمي الخدمات",
         },
         hero: {
             badge: "قريباً في المملكة العربية السعودية",
@@ -84,6 +85,46 @@ const translations = {
                 hairStylist: "الهير ستايلس",
             },
             ctaMore: "+50 فئة إضافية",
+        },
+        vendorFeatures: {
+            badge: "✦ لمقدمي الخدمات ✦",
+            title: "ارتقِ بأعمالك مع منصة تفوق توقعاتك",
+            description: "نوفر لك حلاً تقنياً متكاملاً لإدارة أعمالك بكل احترافية وسهولة، بمفهوم عصري و مخصص بالكامل لقطاع المناسبات.",
+            items: [
+                { title: "الوصول لعملاء أكثر", description: "عرض خدماتك لعدد كبير من العملاء الباحثين عن خدمات المناسبات في مكان واحد." },
+                { title: "زيادة الحجوزات", description: "المنصة تساعدك في استقبال طلبات حجز جديدة بشكل مستمر بدون مجهود تسويقي كبير." },
+                { title: "إدارة المواعيد بسهولة", description: "تنظيم الحجوزات والمواعيد في جدول واضح يمنع التضارب أو النسيان." },
+                { title: "استقبال المدفوعات إلكترونياً", description: "إمكانية الدفع أونلاين بطرق متعددة مثل البطاقة أو التحويل." },
+                { title: "بناء سمعة قوية", description: "تقييمات العملاء تساعدك في رفع مصداقيتك وزيادة الطلب على خدماتك." },
+                { title: "عرض الخدمات والباقات", description: "إضافة باقات متنوعة مع الأسعار والصور لجذب العملاء بسهولة." },
+                { title: "التواصل السريع مع العملاء", description: "إرسال الرسائل والتأكيدات والتنبيهات للعملاء مباشرة." },
+                { title: "تقارير وتحليلات للأداء", description: "معرفة عدد الحجوزات، الإيرادات، والخدمات الأكثر طلباً." },
+                { title: "تسويق مجاني لخدماتك", description: "وجودك في المنصة يعتبر قناة تسويقية بدون تكاليف إعلانات كبيرة." },
+                { title: "إدارة فريق العمل", description: "إمكانية تنظيم عمل الفريق وتوزيع المهام أثناء المناسبات." },
+            ],
+            cta: "انضم كمقدم خدمة",
+            ctaMore: "اكتشف التفاصيل",
+        },
+        vendorPage: {
+            hero: {
+                badge: "شريك النجاح",
+                titleStart: "أدوات متطورة لنمو",
+                titleHighlight: "أعمالك",
+                description: "ندعم مقدمي خدمات المناسبات بحلول تقنية متكاملة تُسهل إدارة الحجوزات، وتسرّع تلقي المدفوعات، وتعزز ميزتك التنافسية في السوق.",
+                cta: "ابدأ مسيرتك معنا",
+            },
+            featuresTitle: "كيف نساعدك على التميز؟",
+            featuresDesc: "اكتشف مجموعة الميزات المصممة خصيصاً لتلبية احتياجات أعمالك في قطاع المناسبات.",
+            stats: [
+                { value: "0%", label: "عمولة على مبيعاتك" },
+                { value: "ثابت", label: "اشتراك شهري للحل التقني" },
+                { value: "24/7", label: "دعم فني مستمر" },
+            ],
+            bottomCta: {
+                title: "هل أنت مستعد لنقل أعمالك للمستوى التالي؟",
+                description: "انضم إلى شبكة تضم أفضل مقدمي خدمات المناسبات واستفد من أحدث التقنيات اليوم.",
+                btn: "انضم لقائمة مقدمي الخدمة"
+            }
         },
         waitlist: {
             badge: "انضم إلينا",
@@ -278,6 +319,7 @@ const translations = {
             surveys: "Surveys",
             contact: "Contact",
             login: "Login",
+            vendors: "For Vendors",
         },
         hero: {
             badge: "Coming Soon in Saudi Arabia",
@@ -333,6 +375,46 @@ const translations = {
                 hairStylist: "Hair Stylist",
             },
             ctaMore: "+50 More Categories",
+        },
+        vendorFeatures: {
+            badge: "✦ For Service Providers ✦",
+            title: "Elevate Your Business with a Complete Platform",
+            description: "We provide you with an integrated technical solution to manage your business professionally and easily, similar to major e-commerce platforms (like Salla), but fully tailored for the events sector.",
+            items: [
+                { title: "Reach More Customers", description: "Showcase your services to a large number of clients looking for event services in one place." },
+                { title: "Increase Bookings", description: "The platform helps you continuously receive new booking requests without major marketing effort." },
+                { title: "Manage Appointments Easily", description: "Organize bookings and appointments in a clear schedule that prevents conflicts or forgetting." },
+                { title: "Accept Electronic Payments", description: "Ability to pay online via multiple methods like card or bank transfer." },
+                { title: "Build a Strong Reputation", description: "Customer reviews help you increase your credibility and demand for your services." },
+                { title: "Display Services & Packages", description: "Add various packages with prices and photos to attract customers easily." },
+                { title: "Quick Communication with Customers", description: "Send messages, confirmations, and alerts directly to customers." },
+                { title: "Performance Reports & Analytics", description: "Know the number of bookings, revenues, and the most requested services." },
+                { title: "Free Marketing for Your Services", description: "Your presence on the platform is a marketing channel without major ad costs." },
+                { title: "Team Management", description: "Ability to organize team work and distribute tasks during events." },
+            ],
+            cta: "Join as a Provider",
+            ctaMore: "Discover Details",
+        },
+        vendorPage: {
+            hero: {
+                badge: "Partner in Success",
+                titleStart: "Advanced Tools to Grow",
+                titleHighlight: "Your Business",
+                description: "We support event service providers with integrated tech solutions that simplify bookings, accelerate payments, and enhance your market competitiveness.",
+                cta: "Start Your Journey With Us",
+            },
+            featuresTitle: "How Do We Help You Stand Out?",
+            featuresDesc: "Explore a suite of features designed specifically to meet your business needs in the events sector.",
+            stats: [
+                { value: "0%", label: "Sales Commission" },
+                { value: "Fixed", label: "Monthly SaaS Subscription" },
+                { value: "24/7", label: "Continuous Support" },
+            ],
+            bottomCta: {
+                title: "Ready to Take Your Business to the Next Level?",
+                description: "Join a network of top event service providers and leverage the latest technologies today.",
+                btn: "Join Vendors Waitlist"
+            }
         },
         waitlist: {
             badge: "Join Us",

@@ -18,10 +18,11 @@ export default function Header() {
 
     const navLinks = useMemo(() => [
         { label: t.nav.home, href: "/#home" },
-        { label: "سوق المناسبات", href: "/market" }, // New Market Link - TODO: Translate
+        { label: "سوق المناسبات", href: "/market" },
         { label: t.nav.features, href: "/#features" },
         { label: t.nav.services, href: "/#categories" },
         { label: t.nav.howItWorks, href: "/#how-it-works" },
+        { label: t.nav.vendors, href: "/vendors" },
         { label: t.nav.about, href: "/#about" },
         { label: t.nav.surveys, href: "/surveys" },
         { label: t.nav.contact, href: "/#contact" },
@@ -56,14 +57,14 @@ export default function Header() {
                     {/* Desktop Nav - Centered */}
                     <div className="hidden md:flex flex-1 justify-center items-center gap-6 lg:gap-8">
                         {navLinks.map((link, i) => (
-                            <a
+                            <Link
                                 key={i}
                                 href={link.href}
                                 className="relative font-medium transition-all duration-300 py-2 text-[var(--charcoal)] hover:text-[var(--primary)] text-sm lg:text-base whitespace-nowrap"
                             >
                                 {link.label}
                                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[var(--primary)] transition-all duration-300 group-hover:w-full"></span>
-                            </a>
+                            </Link>
                         ))}
                     </div>
 
@@ -152,14 +153,14 @@ export default function Header() {
                             <div className="text-xs font-bold text-gray-400 uppercase mb-3 px-2">القائمة الرئيسية</div>
                             {navLinks && navLinks.length > 0 ? (
                                 navLinks.map((link, i) => (
-                                    <a
+                                    <Link
                                         key={i}
                                         href={link.href}
                                         onClick={() => setMobileMenuOpen(false)}
                                         className="block py-3 px-4 mb-2 text-base font-semibold text-gray-800 bg-gray-50 hover:bg-[var(--primary)] hover:text-white rounded-xl transition-all duration-200"
                                     >
                                         {link.label || `Link ${i + 1}`}
-                                    </a>
+                                    </Link>
                                 ))
                             ) : (
                                 <div className="text-red-500 p-4">No nav links available</div>

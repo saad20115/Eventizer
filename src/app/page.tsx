@@ -413,6 +413,80 @@ function HowItWorksSection() {
 
 
 
+// ===== VENDOR FEATURES =====
+function VendorFeaturesSection() {
+  const { t, language } = useLanguage();
+  
+  const icons = [
+    "📅", // إجدولة
+    "💳", // دفع
+    "🚀", // ميزات تنافسية
+    "🎯", // وصول للعملاء
+    "📦", // باقات
+    "📊", // تقارير
+    "🤝", // تعاقدات آمنة
+  ];
+
+  return (
+    <section id="vendor-features" className="py-24 relative overflow-hidden bg-white">
+      {/* Background Decor */}
+      <div className={`absolute top-0 ${language === 'ar' ? 'left-0' : 'right-0'} w-1/2 h-full bg-[#fdfbf7] rounded-${language === 'ar' ? 'r' : 'l'}-[100px] opacity-100 hidden lg:block`} />
+      
+      <div className="container mx-auto px-4 relative z-10">
+        <div className="flex flex-col gap-16 items-center text-center">
+          
+          {/* Content */}
+          <div className="w-full max-w-4xl animate-fadeInUp mx-auto text-center" style={{ animationDelay: '0.1s' }}>
+            <span className="gold-text font-bold mb-4 block text-lg">{t.vendorFeatures.badge}</span>
+            <h2 className="text-4xl md:text-5xl lg:text-5xl font-bold mb-8 text-[#2c2b29] leading-[1.3]">
+              {t.vendorFeatures.title}
+            </h2>
+            <p className="text-lg text-[#6b6965] mb-12 leading-relaxed max-w-2xl mx-auto">
+              {t.vendorFeatures.description}
+            </p>
+            
+            <div className={`flex flex-col sm:flex-row gap-4 justify-center`}>
+              <a href="/vendors" className="btn-primary inline-flex items-center justify-center text-lg px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300">
+                {t.vendorFeatures.ctaMore}
+              </a>
+              <a href="#waitlist" className="btn-outline inline-flex items-center justify-center text-lg px-8 py-4 shadow-lg hover:shadow-xl transition-all duration-300">
+                {t.vendorFeatures.cta}
+              </a>
+            </div>
+          </div>
+
+          {/* Features Grid */}
+          <div className="w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-8 gap-6 animate-fadeInUp" style={{ animationDelay: '0.3s' }}>
+              {t.vendorFeatures.items.map((feature: { title: string; description: string }, idx: number) => {
+                const isFirstOfLastRow = idx === t.vendorFeatures.items.length - 2;
+
+                return (
+                  <div 
+                    key={idx} 
+                    className={`bg-white rounded-3xl p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:-translate-y-2 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-500 group flex flex-col items-center text-center border border-gray-100/80 bg-gradient-to-br from-white to-[#fdfbf7]/30 sm:col-span-1 lg:col-span-2 ${isFirstOfLastRow ? 'lg:col-start-3' : ''}`}
+                  >
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#fdfbf7] to-white flex items-center justify-center text-3xl mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-sm border border-[var(--gold)]/20 text-[var(--gold)]">
+                      {icons[idx % icons.length]}
+                    </div>
+                    <h3 className="text-xl font-bold mb-3 text-[#2c2b29] group-hover:text-[var(--primary)] transition-colors duration-300">
+                      {feature.title}
+                    </h3>
+                    <p className="text-[#8c8a85] text-sm leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // ===== WAITLIST =====
 const waitlistSchema = z.object({
   name: z.string().min(2, "الاسم مطلوب"),
@@ -711,6 +785,7 @@ export default function Home() {
         <FeaturesSection />
         <HowItWorksSection />
         <ServicesMarquee />
+        <VendorFeaturesSection />
         <WaitlistSection />
       </main>
       <Footer />
