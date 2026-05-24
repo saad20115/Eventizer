@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { repairVendorSurvey } from './actions';
+import { repairVendorSurvey, makeQuestion10Optional } from './actions';
 
 export default function RepairSurveyPage() {
     const [status, setStatus] = useState<string>('Idle');
@@ -40,6 +40,30 @@ export default function RepairSurveyPage() {
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
             >
                 {status === 'Running' ? 'Repairing...' : 'Run Repair'}
+            </button>
+
+            <button
+                onClick={async () => {
+                    setStatus('Running');
+                    setLogs(prev => [...prev, 'Making Question 10 optional...']);
+                    try {
+                        const result = await makeQuestion10Optional();
+                        if (result.success) {
+                            setStatus('Success');
+                            setLogs(prev => [...prev, '✅ ' + result.message]);
+                        } else {
+                            setStatus('Error');
+                            setLogs(prev => [...prev, '❌ ' + result.message]);
+                        }
+                    } catch (e: any) {
+                        setStatus('Exception');
+                        setLogs(prev => [...prev, '❌ Exception: ' + e.toString()]);
+                    }
+                }}
+                disabled={status === 'Running'}
+                className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
+                Make Q10 Optional
             </button>
 
             <div className="mt-8 p-4 bg-gray-100 rounded border h-64 overflow-auto font-mono text-sm">

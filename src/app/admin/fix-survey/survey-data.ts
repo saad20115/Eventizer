@@ -15,7 +15,7 @@ export const VENDOR_SURVEY_QUESTIONS = [
     { text: 'رابط موقع إلكتروني أو بورتفوليو (إن وجد)', type: 'text', idx: 9, required: false },
 
     // === Portfolio ===
-    { text: 'يرجى إرفاق رابط يحتوي على نماذج من أعمالك (Google Drive, Dropbox, etc)', type: 'text', idx: 10, required: true },
+    { text: 'يرجى إرفاق رابط يحتوي على نماذج من أعمالك (Google Drive, Dropbox, etc)', type: 'text', idx: 10, required: false },
 
     // === Section 1: Current Status ===
     { text: 'كيف تحصل على عملائك حاليًا؟', type: 'choice', options: ["إنستجرام", "تيك توك", "سناب شات", "واتساب", "توصيات"], idx: 12, required: true },

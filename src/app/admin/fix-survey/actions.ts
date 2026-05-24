@@ -105,3 +105,40 @@ export async function repairVendorSurvey() {
         return { success: false, message: `Exception: ${e.message || String(e)}` };
     }
 }
+
+export async function makeQuestion10Optional() {
+    console.log("🔧 Updating Question 10 to optional...");
+    const supabase = await createClient();
+
+    try {
+        // Find the vendor survey
+        const { data: survey, error: surveyError } = await supabase
+            .from('surveys')
+            .select('id')
+            .eq('target_audience', 'vendor')
+            .limit(1)
+            .single();
+
+        if (surveyError || !survey) {
+            return { success: false, message: 'Vendor survey not found' };
+        }
+
+        // Update only question 10's is_required field
+        const { error: updateError } = await supabase
+            .from('survey_questions')
+            .update({ is_required: false })
+            .eq('survey_id', survey.id)
+            .eq('order_index', 10);
+
+        if (updateError) {
+            console.error("❌ Update failed:", updateError.message);
+            return { success: false, message: `Update failed: ${updateError.message}` };
+        }
+
+        console.log("✅ Question 10 updated to optional.");
+        return { success: true, message: 'Question 10 is now optional (not required).' };
+    } catch (e: any) {
+        console.error("❌ Exception:", e);
+        return { success: false, message: `Exception: ${e.message || String(e)}` };
+    }
+}
